@@ -82,8 +82,10 @@ class _HeroSectionState extends State<HeroSection>
               constraints:
                   const BoxConstraints(maxWidth: AppTheme.maxContentWidth),
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: isMobile ? 24 : 64,
+                padding: EdgeInsets.only(
+                  left: isMobile ? 24 : 64,
+                  right: isMobile ? 24 : 64,
+                  top: AppTheme.navbarHeight + 20,
                 ),
                 child: isMobile
                     ? _buildMobileLayout(context)
