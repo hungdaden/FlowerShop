@@ -1,0 +1,181 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/product_model.dart';
+import '../models/collection_model.dart';
+import '../models/order_model.dart';
+import '../models/message_model.dart';
+
+/// Firestore service — single point of access to Firebase data.
+/// Pattern: UI → Provider → Service → Firestore
+class FirestoreService {
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  // ─── Products ──────────────────────────────────────────────
+
+  Stream<List<ProductModel>> streamProducts({bool activeOnly = true}) {
+    var query = _db.collection('products').orderBy('createdAt', descending: true);
+    if (activeOnly) {
+      query = query.where('isActive', isEqualTo: true);
+    }
+    return query.snapshots().map((snap) =>
+        snap.docs.map((d) => ProductModel.fromJson(d.data(), d.id)).toList());
+  }
+
+  Stream<List<ProductModel>> streamFeaturedProducts() {
+    return _db
+        .collection('products')
+        .where('isFeatured', isEqualTo: true)
+        .where('isActive', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
+        .limit(8)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.map((d) => ProductModel.fromJson(d.data(), d.id)).toList());
+  }
+
+  Stream<List<ProductModel>> streamProductsByCollection(String collectionId) {
+    return _db
+        .collection('products')
+        .where('collectionId', isEqualTo: collectionId)
+        .where('isActive', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.map((d) => ProductModel.fromJson(d.data(), d.id)).toList());
+  }
+
+  Future<ProductModel?> getProduct(String id) async {
+    final doc = await _db.collection('products').doc(id).get();
+    if (!doc.exists) return null;
+    return ProductModel.fromJson(doc.data()!, doc.id);
+  }
+
+  Future<void> addProduct(ProductModel product) async {
+    await _db.collection('products').add(product.toJson());
+  }
+
+  Future<void> updateProduct(String id, Map<String, dynamic> data) async {
+    await _db.collection('products').doc(id).update(data);
+  }
+
+  Future<void> deleteProduct(String id) async {
+    await _db.collection('products').doc(id).delete();
+  }
+
+  // ─── Collections ──────────────────────────────────────────
+
+  Stream<List<CollectionModel>> streamCollections({bool activeOnly = true}) {
+    var query = _db.collection('collections').orderBy('createdAt', descending: true);
+    if (activeOnly) {
+      query = query.where('isActive', isEqualTo: true);
+    }
+    return query.snapshots().map((snap) =>
+        snap.docs.map((d) => CollectionModel.fromJson(d.data(), d.id)).toList());
+  }
+
+  Future<CollectionModel?> getCollection(String id) async {
+    final doc = await _db.collection('collections').doc(id).get();
+    if (!doc.exists) return null;
+    return CollectionModel.fromJson(doc.data()!, doc.id);
+  }
+
+  Future<void> addCollection(CollectionModel collection) async {
+    await _db.collection('collections').add(collection.toJson());
+  }
+
+  Future<void> updateCollection(String id, Map<String, dynamic> data) async {
+    await _db.collection('collections').doc(id).update(data);
+  }
+
+  Future<void> deleteCollection(String id) async {
+    await _db.collection('collections').doc(id).delete();
+  }
+
+  // ─── Orders ──────────────────────────────────────────────
+
+  Stream<List<OrderModel>> streamOrders() {
+    return _db
+        .collection('orders')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.map((d) => OrderModel.fromJson(d.data(), d.id)).toList());
+  }
+
+  Stream<List<OrderModel>> streamOrdersByPhone(String phone) {
+    return _db
+        .collection('orders')
+        .where('phone', isEqualTo: phone)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.map((d) => OrderModel.fromJson(d.data(), d.id)).toList());
+  }
+
+  Stream<List<OrderModel>> streamTodayOrders() {
+    final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    return _db
+        .collection('orders')
+        .where('createdAt',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startOfDay))
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.map((d) => OrderModel.fromJson(d.data(), d.id)).toList());
+  }
+
+  Future<void> createOrder(OrderModel order) async {
+    await _db.collection('orders').add(order.toJson());
+  }
+
+  Future<void> updateOrderStatus(String id, OrderStatus status) async {
+    await _db.collection('orders').doc(id).update({'status': status.name});
+  }
+
+  // ─── Messages ──────────────────────────────────────────────
+
+  Stream<List<MessageModel>> streamMessages(String conversationId) {
+    return _db
+        .collection('messages')
+        .where('conversationId', isEqualTo: conversationId)
+        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.map((d) => MessageModel.fromJson(d.data(), d.id)).toList());
+  }
+
+  Future<void> sendMessage(MessageModel message) async {
+    await _db.collection('messages').add(message.toJson());
+  }
+
+  /// Get list of unique conversation IDs (for admin).
+  Stream<List<String>> streamConversationIds() {
+    return _db
+        .collection('messages')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) {
+      final ids = <String>{};
+      for (final doc in snap.docs) {
+        ids.add(doc.data()['conversationId'] ?? '');
+      }
+      return ids.toList();
+    });
+  }
+
+  // ─── Dashboard Stats ──────────────────────────────────────
+
+  Future<int> getProductCount() async {
+    final snap = await _db
+        .collection('products')
+        .where('isActive', isEqualTo: true)
+        .count()
+        .get();
+    return snap.count ?? 0;
+  }
+
+  Future<int> getOrderCount() async {
+    final snap = await _db.collection('orders').count().get();
+    return snap.count ?? 0;
+  }
+}
