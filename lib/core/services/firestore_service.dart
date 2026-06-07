@@ -12,35 +12,40 @@ class FirestoreService {
   // ─── Products ──────────────────────────────────────────────
 
   Stream<List<ProductModel>> streamProducts({bool activeOnly = true}) {
-    var query = _db.collection('products').orderBy('createdAt', descending: true);
-    if (activeOnly) {
-      query = query.where('isActive', isEqualTo: true);
-    }
-    return query.snapshots().map((snap) =>
-        snap.docs.map((d) => ProductModel.fromJson(d.data(), d.id)).toList());
+    return _db
+        .collection('products')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) {
+      final products =
+          snap.docs.map((d) => ProductModel.fromJson(d.data(), d.id)).toList();
+      if (!activeOnly) return products;
+      return products.where((product) => product.isActive).toList();
+    });
   }
 
   Stream<List<ProductModel>> streamFeaturedProducts() {
     return _db
         .collection('products')
-        .where('isFeatured', isEqualTo: true)
-        .where('isActive', isEqualTo: true)
         .orderBy('createdAt', descending: true)
-        .limit(8)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => ProductModel.fromJson(d.data(), d.id)).toList());
+        .map((snap) => snap.docs
+            .map((d) => ProductModel.fromJson(d.data(), d.id))
+            .where((product) => product.isActive && product.isFeatured)
+            .take(8)
+            .toList());
   }
 
   Stream<List<ProductModel>> streamProductsByCollection(String collectionId) {
     return _db
         .collection('products')
-        .where('collectionId', isEqualTo: collectionId)
-        .where('isActive', isEqualTo: true)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => ProductModel.fromJson(d.data(), d.id)).toList());
+        .map((snap) => snap.docs
+            .map((d) => ProductModel.fromJson(d.data(), d.id))
+            .where((product) =>
+                product.isActive && product.collectionId == collectionId)
+            .toList());
   }
 
   Future<ProductModel?> getProduct(String id) async {
@@ -64,12 +69,17 @@ class FirestoreService {
   // ─── Collections ──────────────────────────────────────────
 
   Stream<List<CollectionModel>> streamCollections({bool activeOnly = true}) {
-    var query = _db.collection('collections').orderBy('createdAt', descending: true);
-    if (activeOnly) {
-      query = query.where('isActive', isEqualTo: true);
-    }
-    return query.snapshots().map((snap) =>
-        snap.docs.map((d) => CollectionModel.fromJson(d.data(), d.id)).toList());
+    return _db
+        .collection('collections')
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snap) {
+      final collections = snap.docs
+          .map((d) => CollectionModel.fromJson(d.data(), d.id))
+          .toList();
+      if (!activeOnly) return collections;
+      return collections.where((collection) => collection.isActive).toList();
+    });
   }
 
   Future<CollectionModel?> getCollection(String id) async {
