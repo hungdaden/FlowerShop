@@ -18,9 +18,14 @@ const messaging = firebase.messaging();
 messaging.onBackgroundMessage((payload) => {
   console.log("[firebase-messaging-sw.js] Nhận thông báo chạy ngầm: ", payload);
 
-  const notificationTitle = payload.notification ? payload.notification.title : "Thông báo mới";
+  // Nếu payload đã có phần 'notification', trình duyệt/SDK sẽ tự hiển thị. Không gọi showNotification lần 2.
+  if (payload.notification) {
+    return;
+  }
+
+  const notificationTitle = payload.data ? payload.data.title : "Thông báo mới";
   const notificationOptions = {
-    body: payload.notification ? payload.notification.body : "Bạn có một tin nhắn mới từ Flower Shop.",
+    body: payload.data ? payload.data.body : "Bạn có một tin nhắn mới từ Flower Shop.",
     icon: "/icons/Icon-192.png"
   };
 
