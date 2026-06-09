@@ -16,7 +16,7 @@ class GlassNavbar extends StatelessWidget implements PreferredSizeWidget {
     _NavItem('Trang chủ', '/', Icons.home_rounded),
     _NavItem('Bộ sưu tập', '/collections', Icons.collections_rounded),
     _NavItem('Sản phẩm', '/products', Icons.local_florist_rounded),
-    _NavItem('Đặt hàng', '/order-tracking', Icons.local_shipping_rounded),
+    _NavItem('Theo dõi đơn hàng', '/order-tracking', Icons.local_shipping_rounded),
     _NavItem('Liên hệ', '/chat', Icons.chat_bubble_rounded),
   ];
 

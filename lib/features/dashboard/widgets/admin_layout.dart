@@ -232,19 +232,24 @@ class AdminLayout extends StatelessWidget {
       child: ListTile(
         leading: Icon(
           item.icon,
-          color: isActive ? Colors.white : AppColors.textSecondary,
+          color: isActive ? AppColors.primaryDark : AppColors.textSecondary,
         ),
         title: Text(
           item.label,
           style: AppTextStyles.label.copyWith(
-            color: isActive ? Colors.white : AppColors.textPrimary,
+            color: isActive ? AppColors.primaryDark : AppColors.textPrimary,
             fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
         selected: isActive,
-        selectedTileColor: AppColors.primary,
+        selectedTileColor: AppColors.primary.withValues(alpha: 0.12),
+        selectedColor: AppColors.primaryDark,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+          side: BorderSide(
+            color: isActive ? AppColors.primary : Colors.transparent,
+            width: 1.5,
+          ),
         ),
         onTap: () => context.go(item.path),
       ),

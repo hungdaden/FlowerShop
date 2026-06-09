@@ -80,7 +80,7 @@ class _ChatPageState extends State<ChatPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Hỗ trợ Flower Shop', style: AppTextStyles.label),
-                      Text('Hoạt động realtime', style: AppTextStyles.caption.copyWith(color: AppColors.success)),
+                      Text('Flower Shop sẽ trả lời bạn sớm nhất nha!', style: AppTextStyles.caption.copyWith(color: AppColors.primaryDark)),
                     ],
                   ),
                 ],

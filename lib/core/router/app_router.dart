@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 import '../../features/home/pages/home_page.dart';
 import '../../features/products/pages/products_page.dart';
@@ -41,8 +42,33 @@ CustomTransitionPage<void> _buildPageTransition({
   );
 }
 
+bool get isAdminSubdomain {
+  if (kIsWeb) {
+    final host = Uri.base.host;
+    return host.startsWith('admin.');
+  }
+  return false;
+}
+
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/',
+  initialLocation: isAdminSubdomain ? '/admin' : '/',
+  redirect: (context, state) {
+    final path = state.uri.path;
+    final isSub = isAdminSubdomain;
+
+    if (isSub) {
+      // Trên subdomain admin, tất cả đường dẫn không phải /admin/* đều chuyển về /admin
+      if (!path.startsWith('/admin')) {
+        return '/admin';
+      }
+    } else {
+      // Trên domain chính (user), không cho phép truy cập đường dẫn quản trị
+      if (path.startsWith('/admin')) {
+        return '/';
+      }
+    }
+    return null;
+  },
   routes: [
     // ─── User Routes ──────────────────────────
     ShellRoute(

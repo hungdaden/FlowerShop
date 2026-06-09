@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
-import 'package:uuid/uuid.dart';
 import '../models/product_model.dart';
 import '../models/collection_model.dart';
 import '../models/order_model.dart';
@@ -90,6 +90,7 @@ class CollectionProvider extends ChangeNotifier {
 /// Provider for orders data.
 class OrderProvider extends ChangeNotifier {
   final FirestoreService _service = FirestoreService();
+  StreamSubscription<List<OrderModel>>? _ordersSubscription;
 
   List<OrderModel> _orders = [];
   List<OrderModel> _searchResults = [];
@@ -124,11 +125,21 @@ class OrderProvider extends ChangeNotifier {
   void searchByPhone(String phone) {
     _isSearching = true;
     notifyListeners();
-    _service.streamOrdersByPhone(phone).listen((data) {
+    _ordersSubscription?.cancel();
+    _ordersSubscription = _service.streamOrdersByPhone(phone).listen((data) {
       _searchResults = data;
       _isSearching = false;
       notifyListeners();
+    }, onError: (error) {
+      _isSearching = false;
+      notifyListeners();
     });
+  }
+
+  @override
+  void dispose() {
+    _ordersSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> createOrder(OrderModel order) async {
@@ -191,27 +202,43 @@ class AuthProvider extends ChangeNotifier {
 /// Provider for realtime chat support.
 class ChatProvider extends ChangeNotifier {
   final FirestoreService _service = FirestoreService();
-  final String _uuid = const Uuid().v4();
+  final String _userConversationId;
 
-  String? _userConversationId;
   List<MessageModel> _messages = [];
   List<String> _adminConversations = [];
+  Map<String, String> _conversationNames = {};
+  Map<String, int> _unreadCounts = {};
   bool _isLoading = false;
 
   List<MessageModel> get messages => _messages;
   List<String> get adminConversations => _adminConversations;
+  Map<String, String> get conversationNames => _conversationNames;
+  Map<String, int> get unreadCounts => _unreadCounts;
   bool get isLoading => _isLoading;
 
-  /// Returns the current conversation ID (generates one if guest user doesn't have one).
-  String get userConversationId {
-    _userConversationId ??= 'chat_$_uuid';
-    return _userConversationId!;
-  }
+  /// Returns the persisted conversation ID.
+  String get userConversationId => _userConversationId;
 
-  ChatProvider() {
+  ChatProvider(this._userConversationId) {
     // For admin chat list
     _service.streamConversationIds().listen((conversations) {
       _adminConversations = conversations;
+      notifyListeners();
+    });
+    // Stream custom conversation names
+    _service.streamConversationNames().listen((names) {
+      _conversationNames = names;
+      notifyListeners();
+    });
+    // Stream all unread messages to count unread messages per conversation
+    _service.streamAllUnreadMessages().listen((messages) {
+      final Map<String, int> counts = {};
+      for (final msg in messages) {
+        if (msg.senderId != 'admin') {
+          counts[msg.conversationId] = (counts[msg.conversationId] ?? 0) + 1;
+        }
+      }
+      _unreadCounts = counts;
       notifyListeners();
     });
   }
@@ -223,7 +250,14 @@ class ChatProvider extends ChangeNotifier {
       _messages = data;
       _isLoading = false;
       notifyListeners();
+    }, onError: (error) {
+      _isLoading = false;
+      notifyListeners();
     });
+  }
+
+  Future<void> markAsRead(String conversationId) async {
+    await _service.markMessagesAsRead(conversationId);
   }
 
   Future<void> sendMessage(String conversationId, String senderId, String messageText) async {
@@ -238,6 +272,14 @@ class ChatProvider extends ChangeNotifier {
     );
 
     await _service.sendMessage(msg);
+  }
+
+  Future<void> renameConversation(String conversationId, String newName) async {
+    await _service.renameConversation(conversationId, newName);
+  }
+
+  Future<void> deleteConversation(String conversationId) async {
+    await _service.deleteConversation(conversationId);
   }
 }
 

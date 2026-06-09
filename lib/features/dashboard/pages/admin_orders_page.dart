@@ -37,24 +37,28 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Filter Row
-          Row(
-            children: [
-              Text('Trạng thái:', style: AppTextStyles.label),
-              const SizedBox(width: 12),
-              _buildFilterChip('all', 'Tất cả'),
-              const SizedBox(width: 8),
-              _buildFilterChip(OrderStatus.pending.name, OrderStatus.pending.displayName),
-              const SizedBox(width: 8),
-              _buildFilterChip(OrderStatus.confirmed.name, OrderStatus.confirmed.displayName),
-              const SizedBox(width: 8),
-              _buildFilterChip(OrderStatus.preparing.name, OrderStatus.preparing.displayName),
-              const SizedBox(width: 8),
-              _buildFilterChip(OrderStatus.delivering.name, OrderStatus.delivering.displayName),
-              const SizedBox(width: 8),
-              _buildFilterChip(OrderStatus.completed.name, OrderStatus.completed.displayName),
-              const SizedBox(width: 8),
-              _buildFilterChip(OrderStatus.cancelled.name, OrderStatus.cancelled.displayName),
-            ],
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            child: Row(
+              children: [
+                Text('Trạng thái:', style: AppTextStyles.label),
+                const SizedBox(width: 12),
+                _buildFilterChip('all', 'Tất cả'),
+                const SizedBox(width: 8),
+                _buildFilterChip(OrderStatus.pending.name, OrderStatus.pending.displayName),
+                const SizedBox(width: 8),
+                _buildFilterChip(OrderStatus.confirmed.name, OrderStatus.confirmed.displayName),
+                const SizedBox(width: 8),
+                _buildFilterChip(OrderStatus.preparing.name, OrderStatus.preparing.displayName),
+                const SizedBox(width: 8),
+                _buildFilterChip(OrderStatus.delivering.name, OrderStatus.delivering.displayName),
+                const SizedBox(width: 8),
+                _buildFilterChip(OrderStatus.completed.name, OrderStatus.completed.displayName),
+                const SizedBox(width: 8),
+                _buildFilterChip(OrderStatus.cancelled.name, OrderStatus.cancelled.displayName),
+              ],
+            ),
           ),
           const SizedBox(height: 24),
 
@@ -65,6 +69,7 @@ class _AdminOrdersPageState extends State<AdminOrdersPage> {
                 : filteredOrders.isEmpty
                     ? const GlassCard(child: Center(child: Text('Không có đơn hàng nào.')))
                     : ListView.builder(
+                        clipBehavior: Clip.none,
                         itemCount: filteredOrders.length,
                         itemBuilder: (context, index) {
                           final order = filteredOrders[index];

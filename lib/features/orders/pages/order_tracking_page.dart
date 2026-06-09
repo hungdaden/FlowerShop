@@ -64,7 +64,13 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                 constraints: const BoxConstraints(maxWidth: 800),
                 child: Column(
                   children: [
-                    Text('Theo dõi đơn hàng', style: AppTextStyles.h1, textAlign: TextAlign.center),
+                    Text(
+                      'Theo dõi đơn hàng',
+                      style: isMobile
+                          ? AppTextStyles.h2.copyWith(fontSize: 28)
+                          : AppTextStyles.h1,
+                      textAlign: TextAlign.center,
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'Nhập số điện thoại của bạn để kiểm tra trạng thái và lịch trình vận chuyển đơn hàng.',
@@ -153,6 +159,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
   }
 
   Widget _buildOrdersList(List<OrderModel> orders) {
+    final isMobile = MediaQuery.of(context).size.width < 768;
     return ListView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -166,32 +173,39 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Order header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('MÃ ĐƠN HÀNG: ${order.id}', style: AppTextStyles.label),
-                        const SizedBox(height: 4),
-                        Text('Ngày đặt: ${_dateFormat.format(order.createdAt)}', style: AppTextStyles.caption),
-                      ],
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: _getStatusColor(order.status).withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                        border: Border.all(color: _getStatusColor(order.status).withValues(alpha: 0.3)),
+                 // Order header
+                isMobile
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text('MÃ ĐƠN: ${order.id}', style: AppTextStyles.label, overflow: TextOverflow.ellipsis),
+                              ),
+                              const SizedBox(width: 8),
+                              _buildStatusChip(order.status),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Ngày đặt: ${_dateFormat.format(order.createdAt)}', style: AppTextStyles.caption),
+                        ],
+                      )
+                    : Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('MÃ ĐƠN HÀNG: ${order.id}', style: AppTextStyles.label),
+                              const SizedBox(height: 4),
+                              Text('Ngày đặt: ${_dateFormat.format(order.createdAt)}', style: AppTextStyles.caption),
+                            ],
+                          ),
+                          _buildStatusChip(order.status),
+                        ],
                       ),
-                      child: Text(
-                        order.status.displayName,
-                        style: AppTextStyles.labelSmall.copyWith(color: _getStatusColor(order.status)),
-                      ),
-                    ),
-                  ],
-                ),
                 const SizedBox(height: 24),
                 const Divider(),
                 const SizedBox(height: 20),
@@ -359,6 +373,21 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
       default:
         return '';
     }
+  }
+
+  Widget _buildStatusChip(OrderStatus status) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: _getStatusColor(status).withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        border: Border.all(color: _getStatusColor(status).withValues(alpha: 0.3)),
+      ),
+      child: Text(
+        status.displayName,
+        style: AppTextStyles.labelSmall.copyWith(color: _getStatusColor(status)),
+      ),
+    );
   }
 
   Color _getStatusColor(OrderStatus status) {

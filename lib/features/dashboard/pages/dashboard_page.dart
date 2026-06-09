@@ -24,135 +24,154 @@ class DashboardPage extends StatelessWidget {
     final todayOrders = orderProvider.todayOrders.length;
     final totalRevenue = orderProvider.totalRevenue;
 
+    final isTablet = MediaQuery.of(context).size.width < 1024;
+
     return AdminLayout(
       currentPath: '/admin/dashboard',
       title: 'Tổng quan hệ thống',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Metrics Grid
-          GridView.count(
-            crossAxisCount: MediaQuery.of(context).size.width < 768 ? 2 : 4,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 20,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            childAspectRatio: 1.4,
-            children: [
-              _buildMetricCard(
-                title: 'Tổng doanh thu',
-                value: _currencyFormat.format(totalRevenue),
-                icon: Icons.monetization_on_rounded,
-                color: AppColors.success,
-              ),
-              _buildMetricCard(
-                title: 'Tổng đơn hàng',
-                value: '$totalOrders',
-                icon: Icons.shopping_bag_rounded,
-                color: AppColors.primary,
-              ),
-              _buildMetricCard(
-                title: 'Đơn hàng hôm nay',
-                value: '$todayOrders',
-                icon: Icons.today_rounded,
-                color: AppColors.secondary,
-              ),
-              _buildMetricCard(
-                title: 'Sản phẩm hoạt động',
-                value: '$totalProducts',
-                icon: Icons.local_florist_rounded,
-                color: AppColors.info,
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-
-          // Lower Section: Quick actions & Stats list
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      child: SingleChildScrollView(
+        clipBehavior: Clip.none,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Metrics Grid
+            GridView.count(
+              crossAxisCount: MediaQuery.of(context).size.width < 768 ? 2 : 4,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              childAspectRatio: 1.4,
+              clipBehavior: Clip.none,
               children: [
-                // Quick Actions
-                Expanded(
-                  flex: 3,
-                  child: GlassCard(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Lối tắt quản lý', style: AppTextStyles.h4),
-                        const SizedBox(height: 20),
-                        _buildActionTile(
-                          context: context,
-                          title: 'Thêm sản phẩm mới',
-                          description: 'Đăng hoa lên cửa hàng',
-                          icon: Icons.add_circle_outline_rounded,
-                          color: AppColors.primary,
-                          onTap: () => context.go('/admin/products'),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildActionTile(
-                          context: context,
-                          title: 'Xử lý đơn hàng mới',
-                          description: 'Kiểm tra & xác nhận đơn',
-                          icon: Icons.receipt_long_rounded,
-                          color: AppColors.secondary,
-                          onTap: () => context.go('/admin/orders'),
-                        ),
-                        const SizedBox(height: 12),
-                        _buildActionTile(
-                          context: context,
-                          title: 'Tạo bộ sưu tập mới',
-                          description: 'Phân loại hoa theo chủ đề',
-                          icon: Icons.create_new_folder_rounded,
-                          color: AppColors.info,
-                          onTap: () => context.go('/admin/collections'),
-                        ),
-                      ],
-                    ),
-                  ),
+                _buildMetricCard(
+                  title: 'Tổng doanh thu',
+                  value: _currencyFormat.format(totalRevenue),
+                  icon: Icons.monetization_on_rounded,
+                  color: AppColors.success,
                 ),
-                const SizedBox(width: 24),
-                // Recent Orders summary list
-                Expanded(
-                  flex: 5,
-                  child: GlassCard(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Đơn hàng gần đây', style: AppTextStyles.h4),
-                        const SizedBox(height: 20),
-                        if (orderProvider.isLoading)
-                          const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                        else if (orderProvider.orders.isEmpty)
-                          const Expanded(child: Center(child: Text('Chưa có đơn hàng nào.')))
-                        else
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: orderProvider.orders.take(5).length,
-                              itemBuilder: (context, index) {
-                                final order = orderProvider.orders[index];
-                                return ListTile(
-                                  contentPadding: EdgeInsets.zero,
-                                  title: Text(order.customerName, style: AppTextStyles.label),
-                                  subtitle: Text('Đơn giá: ${_currencyFormat.format(order.totalAmount)}'),
-                                  trailing: Chip(
-                                    label: Text(order.status.displayName),
-                                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
-                                  ),
-                                  onTap: () => context.go('/admin/orders'),
-                                );
-                              },
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
+                _buildMetricCard(
+                  title: 'Tổng đơn hàng',
+                  value: '$totalOrders',
+                  icon: Icons.shopping_bag_rounded,
+                  color: AppColors.primary,
+                ),
+                _buildMetricCard(
+                  title: 'Đơn hàng hôm nay',
+                  value: '$todayOrders',
+                  icon: Icons.today_rounded,
+                  color: AppColors.secondary,
+                ),
+                _buildMetricCard(
+                  title: 'Sản phẩm hoạt động',
+                  value: '$totalProducts',
+                  icon: Icons.local_florist_rounded,
+                  color: AppColors.info,
                 ),
               ],
             ),
+            const SizedBox(height: 40),
+
+            // Lower Section: Quick actions & Stats list
+            if (isTablet)
+              Column(
+                children: [
+                  _buildQuickActions(context),
+                  const SizedBox(height: 24),
+                  _buildRecentOrders(orderProvider),
+                ],
+              )
+            else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: _buildQuickActions(context),
+                  ),
+                  const SizedBox(width: 24),
+                  Expanded(
+                    flex: 5,
+                    child: _buildRecentOrders(orderProvider),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickActions(BuildContext context) {
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Lối tắt quản lý', style: AppTextStyles.h4),
+          const SizedBox(height: 20),
+          _buildActionTile(
+            context: context,
+            title: 'Thêm sản phẩm mới',
+            description: 'Đăng hoa lên cửa hàng',
+            icon: Icons.add_circle_outline_rounded,
+            color: AppColors.primary,
+            onTap: () => context.go('/admin/products'),
           ),
+          const SizedBox(height: 12),
+          _buildActionTile(
+            context: context,
+            title: 'Xử lý đơn hàng mới',
+            description: 'Kiểm tra & xác nhận đơn',
+            icon: Icons.receipt_long_rounded,
+            color: AppColors.secondary,
+            onTap: () => context.go('/admin/orders'),
+          ),
+          const SizedBox(height: 12),
+          _buildActionTile(
+            context: context,
+            title: 'Tạo bộ sưu tập mới',
+            description: 'Phân loại hoa theo chủ đề',
+            icon: Icons.create_new_folder_rounded,
+            color: AppColors.info,
+            onTap: () => context.go('/admin/collections'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentOrders(OrderProvider orderProvider) {
+    return GlassCard(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Đơn hàng gần đây', style: AppTextStyles.h4),
+          const SizedBox(height: 20),
+          if (orderProvider.isLoading)
+            const Center(child: CircularProgressIndicator(color: AppColors.primary))
+          else if (orderProvider.orders.isEmpty)
+            const Center(child: Text('Chưa có đơn hàng nào.'))
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: orderProvider.orders.take(5).length,
+              itemBuilder: (context, index) {
+                final order = orderProvider.orders[index];
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(order.customerName, style: AppTextStyles.label),
+                  subtitle: Text('Đơn giá: ${_currencyFormat.format(order.totalAmount)}'),
+                  trailing: Chip(
+                    label: Text(order.status.displayName),
+                    backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                  ),
+                  onTap: () => context.go('/admin/orders'),
+                );
+              },
+            ),
         ],
       ),
     );

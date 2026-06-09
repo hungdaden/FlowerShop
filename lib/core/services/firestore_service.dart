@@ -115,10 +115,13 @@ class FirestoreService {
     return _db
         .collection('orders')
         .where('phone', isEqualTo: phone)
-        .orderBy('createdAt', descending: true)
+        .limit(50)
         .snapshots()
-        .map((snap) =>
-            snap.docs.map((d) => OrderModel.fromJson(d.data(), d.id)).toList());
+        .map((snap) {
+      final list = snap.docs.map((d) => OrderModel.fromJson(d.data(), d.id)).toList();
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt)); // Sắp xếp mới nhất lên đầu
+      return list;
+    });
   }
 
   Stream<List<OrderModel>> streamTodayOrders() {
@@ -148,14 +151,43 @@ class FirestoreService {
     return _db
         .collection('messages')
         .where('conversationId', isEqualTo: conversationId)
-        .orderBy('createdAt', descending: false)
+        .snapshots()
+        .map((snap) {
+      final list = snap.docs.map((d) => MessageModel.fromJson(d.data(), d.id)).toList();
+      list.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      return list;
+    });
+  }
+
+  Future<void> sendMessage(MessageModel message) async {
+    await _db.collection('messages').add(message.toJson());
+  }
+
+  /// Stream all unread messages in the database.
+  Stream<List<MessageModel>> streamAllUnreadMessages() {
+    return _db
+        .collection('messages')
+        .where('isRead', isEqualTo: false)
         .snapshots()
         .map((snap) =>
             snap.docs.map((d) => MessageModel.fromJson(d.data(), d.id)).toList());
   }
 
-  Future<void> sendMessage(MessageModel message) async {
-    await _db.collection('messages').add(message.toJson());
+  /// Mark all unread user messages in a conversation as read.
+  Future<void> markMessagesAsRead(String conversationId) async {
+    final snap = await _db
+        .collection('messages')
+        .where('conversationId', isEqualTo: conversationId)
+        .where('isRead', isEqualTo: false)
+        .get();
+
+    final batch = _db.batch();
+    for (final doc in snap.docs) {
+      if (doc.data()['senderId'] != 'admin') {
+        batch.update(doc.reference, {'isRead': true});
+      }
+    }
+    await batch.commit();
   }
 
   /// Get list of unique conversation IDs (for admin).
@@ -171,6 +203,42 @@ class FirestoreService {
       }
       return ids.toList();
     });
+  }
+
+  /// Stream conversation custom names (for admin).
+  Stream<Map<String, String>> streamConversationNames() {
+    return _db.collection('conversation_metadata').snapshots().map((snap) {
+      final Map<String, String> names = {};
+      for (final doc in snap.docs) {
+        names[doc.id] = doc.data()['customName'] ?? '';
+      }
+      return names;
+    });
+  }
+
+  /// Set or update the custom name of a conversation.
+  Future<void> renameConversation(String conversationId, String newName) async {
+    await _db.collection('conversation_metadata').doc(conversationId).set({
+      'customName': newName,
+    }, SetOptions(merge: true));
+  }
+
+  /// Delete a conversation and all its messages.
+  Future<void> deleteConversation(String conversationId) async {
+    // Delete metadata
+    await _db.collection('conversation_metadata').doc(conversationId).delete();
+
+    // Delete all messages belonging to this conversation
+    final messagesSnap = await _db
+        .collection('messages')
+        .where('conversationId', isEqualTo: conversationId)
+        .get();
+
+    final batch = _db.batch();
+    for (final doc in messagesSnap.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
   }
 
   // ─── Dashboard Stats ──────────────────────────────────────

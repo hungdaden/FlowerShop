@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:uuid/uuid.dart';
 import 'core/router/app_router.dart';
 import 'core/services/app_providers.dart';
 import 'core/theme/app_theme.dart';
@@ -23,11 +25,20 @@ void main() async {
     ),
   );
 
-  runApp(const MyApp());
+  // Retrieve or generate persistent conversation ID for guest users
+  final prefs = await SharedPreferences.getInstance();
+  String? conversationId = prefs.getString('user_conversation_id');
+  if (conversationId == null) {
+    conversationId = 'chat_${const Uuid().v4()}';
+    await prefs.setString('user_conversation_id', conversationId);
+  }
+
+  runApp(MyApp(conversationId: conversationId));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String conversationId;
+  const MyApp({super.key, required this.conversationId});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +48,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CollectionProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider(create: (_) => ChatProvider(conversationId)),
       ],
       child: MaterialApp.router(
         title: 'Flower Shop - Premium Flower Shop',

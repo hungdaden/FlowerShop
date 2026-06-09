@@ -6,6 +6,7 @@ class MessageModel {
   final String senderId;
   final String message;
   final DateTime createdAt;
+  final bool isRead;
 
   MessageModel({
     required this.id,
@@ -13,6 +14,7 @@ class MessageModel {
     required this.senderId,
     required this.message,
     DateTime? createdAt,
+    this.isRead = false,
   }) : createdAt = createdAt ?? DateTime.now();
 
   factory MessageModel.fromJson(Map<String, dynamic> json, String docId) {
@@ -24,6 +26,7 @@ class MessageModel {
       createdAt: json['createdAt'] is Timestamp
           ? (json['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
+      isRead: json['isRead'] ?? false,
     );
   }
 
@@ -33,6 +36,7 @@ class MessageModel {
       'senderId': senderId,
       'message': message,
       'createdAt': Timestamp.fromDate(createdAt),
+      'isRead': isRead,
     };
   }
 }

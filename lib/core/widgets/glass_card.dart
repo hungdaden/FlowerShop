@@ -94,6 +94,12 @@ class _GlassCardState extends State<GlassCard>
                 margin: widget.margin,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(widget.borderRadius),
+                  border: Border.all(
+                    color: _isHovered
+                        ? AppColors.primary.withValues(alpha: 0.6)
+                        : AppColors.border.withValues(alpha: widget.borderOpacity),
+                    width: 1.2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.shadowLight.withValues(
@@ -105,7 +111,7 @@ class _GlassCardState extends State<GlassCard>
                   ],
                 ),
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(widget.borderRadius),
+                  borderRadius: BorderRadius.circular(widget.borderRadius > 1.2 ? widget.borderRadius - 1.2 : widget.borderRadius),
                   child: BackdropFilter(
                     filter: ImageFilter.blur(
                       sigmaX: widget.blur,
@@ -113,20 +119,8 @@ class _GlassCardState extends State<GlassCard>
                     ),
                     child: Container(
                       padding: widget.padding,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(
-                          alpha: widget.opacity +
-                              (_shadowAnimation.value * 0.05),
-                        ),
-                        borderRadius:
-                            BorderRadius.circular(widget.borderRadius),
-                        border: Border.all(
-                          color: _isHovered
-                              ? AppColors.primary.withValues(alpha: 0.3)
-                              : Colors.white.withValues(
-                                  alpha: widget.borderOpacity),
-                          width: 1,
-                        ),
+                      color: Colors.white.withValues(
+                        alpha: widget.opacity + (_shadowAnimation.value * 0.05),
                       ),
                       child: child,
                     ),
