@@ -44,10 +44,8 @@ CustomTransitionPage<void> _buildPageTransition({
 
 bool get isAdminSubdomain {
   if (kIsWeb) {
-    final host = Uri.base.host;
-    return host.startsWith('admin.') || 
-           host.startsWith('admin-') || 
-           host.startsWith('adminflower');
+    final host = Uri.base.host.toLowerCase();
+    return host.startsWith('admin') || host.contains('.admin');
   }
   return false;
 }
