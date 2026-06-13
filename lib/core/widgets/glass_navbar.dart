@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../utils/scroll_controllers.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_text_styles.dart';
+import 'notification_bell.dart';
 
 /// Floating glass navigation bar.
 /// Desktop: centered floating pill. Mobile: simplified with hamburger.
@@ -82,8 +84,16 @@ class GlassNavbar extends StatelessWidget implements PreferredSizeWidget {
               ..._navItems.map((item) => _NavItemWidget(
                     item: item,
                     isActive: _isActive(item.path),
-                    onTap: () => context.go(item.path),
+                    onTap: () {
+                      if (currentPath == item.path) {
+                        _scrollTo(item.path);
+                      } else {
+                        context.go(item.path);
+                      }
+                    },
                   )),
+              const SizedBox(width: 8),
+              const NotificationBell(),
               const SizedBox(width: 8),
             ],
           ),
@@ -119,6 +129,8 @@ class GlassNavbar extends StatelessWidget implements PreferredSizeWidget {
             children: [
               _buildLogo(context),
               const Spacer(),
+              const NotificationBell(),
+              const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.menu_rounded),
                 color: AppColors.textPrimary,
@@ -133,7 +145,13 @@ class GlassNavbar extends StatelessWidget implements PreferredSizeWidget {
 
   Widget _buildLogo(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.go('/'),
+      onTap: () {
+        if (currentPath == '/') {
+          _scrollTo('/');
+        } else {
+          context.go('/');
+        }
+      },
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
         child: Row(
@@ -299,7 +317,11 @@ class _MobileDrawer extends StatelessWidget {
               ),
               onTap: () {
                 Navigator.pop(context);
-                context.go(item.path);
+                if (currentPath == item.path) {
+                  _scrollTo(item.path);
+                } else {
+                  context.go(item.path);
+                }
               },
             );
           }),
@@ -310,3 +332,24 @@ class _MobileDrawer extends StatelessWidget {
     );
   }
 }
+
+void _scrollTo(String path) {
+  ScrollController? controller;
+  if (path == '/') {
+    controller = homeScrollController;
+  } else if (path == '/collections') {
+    controller = collectionsScrollController;
+  } else if (path == '/products') {
+    controller = productsScrollController;
+  }
+
+  if (controller != null && controller.hasClients) {
+    controller.animateTo(
+      0,
+      duration: const Duration(milliseconds: 600),
+      curve: Curves.easeInOutCubic,
+    );
+  }
+}
+
+

@@ -54,6 +54,15 @@ final GoRouter appRouter = GoRouter(
   initialLocation: isAdminSubdomain ? '/admin' : '/',
   redirect: (context, state) {
     final path = state.uri.path;
+    
+    // Nếu đang chạy ở môi trường local (localhost hoặc 127.0.0.1), cho phép truy cập trực tiếp cả 2 giao diện
+    if (kIsWeb) {
+      final host = Uri.base.host.toLowerCase();
+      if (host == 'localhost' || host == '127.0.0.1' || host.startsWith('192.168.')) {
+        return null; // Bỏ qua bộ lọc chuyển hướng ở local
+      }
+    }
+
     final isSub = isAdminSubdomain;
 
     if (isSub) {

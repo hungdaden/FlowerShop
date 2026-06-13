@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/models/collection_model.dart';
 import '../../../core/services/app_providers.dart';
+import '../../../core/services/storage_service.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/glass_button.dart';
 import '../../../core/widgets/glass_text_field.dart';
+import '../../../core/widgets/image_preview_dialog.dart';
 import '../widgets/admin_layout.dart';
 
 class AdminCollectionsPage extends StatefulWidget {
@@ -25,6 +28,45 @@ class _AdminCollectionsPageState extends State<AdminCollectionsPage> {
   final TextEditingController _descController = TextEditingController();
   final TextEditingController _imageController = TextEditingController();
   bool _isActive = true;
+  bool _isUploadingImage = false;
+
+  Future<void> _pickAndUploadImage(StateSetter setDialogState) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      setDialogState(() {
+        _isUploadingImage = true;
+      });
+
+      final bytes = await image.readAsBytes();
+      final extension = image.name.split('.').last.toLowerCase();
+      final validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+      final fileExt = validExtensions.contains(extension) ? extension : 'jpg';
+
+      final storageService = StorageService();
+      final url = await storageService.uploadImageBytes(
+        bytes: bytes,
+        folder: 'collections',
+        fileExtension: fileExt,
+      );
+
+      setDialogState(() {
+        _imageController.text = url;
+        _isUploadingImage = false;
+      });
+    } catch (e) {
+      setDialogState(() {
+        _isUploadingImage = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(backgroundColor: AppColors.error, content: Text('Lỗi tải ảnh: $e')),
+        );
+      }
+    }
+  }
 
   void _clearForm() {
     _editingCollection = null;
@@ -90,11 +132,20 @@ class _AdminCollectionsPageState extends State<AdminCollectionsPage> {
                                 return DataRow(
                                   cells: [
                                     DataCell(
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: c.imageUrl.isNotEmpty
-                                            ? Image.network(c.imageUrl, width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,__,___)=>_placeholderIcon())
-                                            : _placeholderIcon(),
+                                      Tooltip(
+                                        message: 'Xem chi tiết ảnh',
+                                        child: InkWell(
+                                          onTap: c.imageUrl.isNotEmpty
+                                              ? () => ImagePreviewDialog.show(context, c.imageUrl, c.name)
+                                              : null,
+                                          borderRadius: BorderRadius.circular(6),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(6),
+                                            child: c.imageUrl.isNotEmpty
+                                                ? Image.network(c.imageUrl, width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,__,___)=>_placeholderIcon())
+                                                : _placeholderIcon(),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     DataCell(Text(c.name, style: AppTextStyles.label)),
@@ -123,7 +174,7 @@ class _AdminCollectionsPageState extends State<AdminCollectionsPage> {
                                           ),
                                           IconButton(
                                             icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
-                                            onPressed: () => _confirmDelete(c.id, collectionProvider),
+                                            onPressed: () => _confirmDelete(c, collectionProvider),
                                           ),
                                         ],
                                       ),
@@ -181,10 +232,47 @@ class _AdminCollectionsPageState extends State<AdminCollectionsPage> {
                       maxLines: 3,
                     ),
                     const SizedBox(height: 16),
-                    GlassTextField(
-                      controller: _imageController,
-                      label: 'Link hình ảnh danh mục',
-                      hint: 'https://images.unsplash.com/photo-1...',
+                     Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: GlassTextField(
+                                controller: _imageController,
+                                label: 'Hình ảnh bộ sưu tập (Link)',
+                                hint: 'https://images.unsplash.com/photo-1...',
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _isUploadingImage
+                                ? const SizedBox(
+                                    width: 48,
+                                    height: 48,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+                                    ),
+                                  )
+                                : Tooltip(
+                                    message: 'Chọn và tải ảnh từ thiết bị',
+                                    child: InkWell(
+                                      onTap: () => _pickAndUploadImage(setDialogState),
+                                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: AppColors.border),
+                                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                        ),
+                                        child: const Icon(Icons.add_photo_alternate_outlined, color: AppColors.primary),
+                                      ),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     Row(
@@ -267,7 +355,7 @@ class _AdminCollectionsPageState extends State<AdminCollectionsPage> {
     }
   }
 
-  void _confirmDelete(String id, CollectionProvider provider) {
+  void _confirmDelete(CollectionModel c, CollectionProvider provider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -282,7 +370,13 @@ class _AdminCollectionsPageState extends State<AdminCollectionsPage> {
             onPressed: () async {
               final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
-              await provider.deleteCollection(id);
+              
+              // Xóa ảnh của danh mục trên storage nếu có lưu trên Storage của chúng ta
+              if (c.imageUrl.isNotEmpty && c.imageUrl.contains('firebasestorage.googleapis.com')) {
+                await StorageService().deleteImageByUrl(c.imageUrl);
+              }
+              
+              await provider.deleteCollection(c.id);
               messenger.showSnackBar(
                 const SnackBar(backgroundColor: AppColors.success, content: Text('Xóa bộ sưu tập thành công.')),
               );

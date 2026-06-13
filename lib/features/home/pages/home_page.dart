@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/scroll_controllers.dart';
 import '../widgets/hero_section.dart';
 import '../widgets/featured_collections_section.dart';
 import '../widgets/featured_products_section.dart';
@@ -12,6 +13,7 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
+      controller: homeScrollController,
       child: Column(
         children: const [
           HeroSection(),

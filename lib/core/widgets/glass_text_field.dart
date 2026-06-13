@@ -16,6 +16,7 @@ class GlassTextField extends StatefulWidget {
   final IconData? prefixIcon;
   final Widget? suffix;
   final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onFieldSubmitted;
   final bool enabled;
 
   const GlassTextField({
@@ -30,6 +31,7 @@ class GlassTextField extends StatefulWidget {
     this.prefixIcon,
     this.suffix,
     this.onChanged,
+    this.onFieldSubmitted,
     this.enabled = true,
   });
 
@@ -77,6 +79,7 @@ class _GlassTextFieldState extends State<GlassTextField> {
                 obscureText: widget.obscureText,
                 enabled: widget.enabled,
                 onChanged: widget.onChanged,
+                onFieldSubmitted: widget.onFieldSubmitted,
                 style: AppTextStyles.body,
                 validator: (value) {
                   final error = widget.validator?.call(value);

@@ -38,7 +38,7 @@ class FeaturedCollectionsSection extends StatelessWidget {
               // Collection cards
               if (provider.isLoading)
                 _buildSkeletonGrid(isMobile)
-              else if (provider.collections.isEmpty)
+              else if (provider.activeCollections.isEmpty)
                 _buildEmpty()
               else
                 _buildGrid(context, provider, isMobile),
@@ -51,7 +51,7 @@ class FeaturedCollectionsSection extends StatelessWidget {
 
   Widget _buildGrid(
       BuildContext context, CollectionProvider provider, bool isMobile) {
-    final collections = provider.collections.take(6).toList();
+    final collections = provider.activeCollections.take(6).toList();
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),

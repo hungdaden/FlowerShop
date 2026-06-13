@@ -136,8 +136,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ? CachedNetworkImage(
                           imageUrl: imageUrls[_activeImageIndex],
                           fit: BoxFit.cover,
+                          errorWidget: (context, url, error) => _placeholder(size: 80),
                         )
-                      : _placeholder(),
+                      : _placeholder(size: 80),
                 ),
               ),
               // Thumbnails
@@ -167,6 +168,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             child: CachedNetworkImage(
                               imageUrl: imageUrls[index],
                               fit: BoxFit.cover,
+                              errorWidget: (context, url, error) => _placeholder(size: 30),
                             ),
                           ),
                         ),
@@ -271,8 +273,9 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ? CachedNetworkImage(
                     imageUrl: imageUrls[_activeImageIndex],
                     fit: BoxFit.cover,
+                    errorWidget: (context, url, error) => _placeholder(size: 80),
                   )
-                : _placeholder(),
+                : _placeholder(size: 80),
           ),
         ),
         if (imageUrls.length > 1) ...[
@@ -301,6 +304,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       child: CachedNetworkImage(
                         imageUrl: imageUrls[index],
                         fit: BoxFit.cover,
+                        errorWidget: (context, url, error) => _placeholder(size: 20),
                       ),
                     ),
                   ),
@@ -382,11 +386,11 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
     );
   }
 
-  Widget _placeholder() {
+  Widget _placeholder({double size = 80}) {
     return Container(
       color: AppColors.primaryLight.withValues(alpha: 0.2),
-      child: const Center(
-        child: Icon(Icons.local_florist, size: 80, color: AppColors.primary),
+      child: Center(
+        child: Icon(Icons.local_florist, size: size, color: AppColors.primary),
       ),
     );
   }

@@ -128,12 +128,13 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                               ),
                               const SizedBox(height: 20),
                             ],
-                            GlassTextField(
+                             GlassTextField(
                               controller: _emailController,
                               label: 'Email quản trị',
                               hint: 'admin@floral.vn',
                               keyboardType: TextInputType.emailAddress,
                               prefixIcon: Icons.email_outlined,
+                              onFieldSubmitted: (_) => _login(),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
                                   return 'Vui lòng nhập email';
@@ -148,6 +149,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                               hint: '••••••••',
                               obscureText: true,
                               prefixIcon: Icons.lock_outline_rounded,
+                              onFieldSubmitted: (_) => _login(),
                               validator: (val) {
                                 if (val == null || val.trim().isEmpty) {
                                   return 'Vui lòng nhập mật khẩu';
@@ -194,8 +196,13 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       _errorMessage = null;
     });
 
+    String emailInput = _emailController.text.trim();
+    if (emailInput == 'admin') {
+      emailInput = 'admin@floral.vn';
+    }
+
     final success = await context.read<AuthProvider>().signIn(
-          _emailController.text.trim(),
+          emailInput,
           _passwordController.text,
         );
 

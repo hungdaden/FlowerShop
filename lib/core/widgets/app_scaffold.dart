@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../utils/scroll_controllers.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
 import '../theme/app_text_styles.dart';
@@ -72,13 +74,13 @@ class AppFooter extends StatelessWidget {
           constraints: const BoxConstraints(maxWidth: AppTheme.maxContentWidth),
           child: isMobile
               ? _buildMobileFooter()
-              : _buildDesktopFooter(),
+              : _buildDesktopFooter(context),
         ),
       ),
     );
   }
 
-  Widget _buildDesktopFooter() {
+  Widget _buildDesktopFooter(BuildContext context) {
     return Column(
       children: [
         Row(
@@ -109,9 +111,9 @@ class AppFooter extends StatelessWidget {
                 children: [
                   Text('Liên kết', style: AppTextStyles.label),
                   const SizedBox(height: 16),
-                  _footerLink('Trang chủ'),
-                  _footerLink('Bộ sưu tập'),
-                  _footerLink('Sản phẩm'),
+                  _footerLink(context, 'Trang chủ', '/'),
+                  _footerLink(context, 'Bộ sưu tập', '/collections'),
+                  _footerLink(context, 'Sản phẩm', '/products'),
                 ],
               ),
             ),
@@ -122,9 +124,9 @@ class AppFooter extends StatelessWidget {
                 children: [
                   Text('Hỗ trợ', style: AppTextStyles.label),
                   const SizedBox(height: 16),
-                  _footerLink('Theo dõi đơn hàng'),
-                  _footerLink('Liên hệ'),
-                  _footerLink('Chính sách'),
+                  _footerLink(context, 'Theo dõi đơn hàng', '/order-tracking'),
+                  _footerLink(context, 'Liên hệ', '/chat'),
+                  _footerLink(context, 'Chính sách', '/policy'),
                 ],
               ),
             ),
@@ -180,13 +182,50 @@ class AppFooter extends StatelessWidget {
     );
   }
 
-  Widget _footerLink(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: Text(text, style: AppTextStyles.bodySmall),
-      ),
+  Widget _footerLink(BuildContext context, String text, String path) {
+    return FooterLink(
+      text: text,
+      onTap: () {
+        if (path == '/policy') {
+          ScaffoldMessenger.of(context).clearSnackBars();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Chính sách của chúng tôi hiện đang được cập nhật.',
+                style: AppTextStyles.bodySmall.copyWith(color: Colors.white),
+              ),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.all(16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+              ),
+            ),
+          );
+        } else {
+          final currentPath = GoRouterState.of(context).uri.path;
+          if (currentPath == path) {
+            ScrollController? controller;
+            if (path == '/') {
+              controller = homeScrollController;
+            } else if (path == '/collections') {
+              controller = collectionsScrollController;
+            } else if (path == '/products') {
+              controller = productsScrollController;
+            }
+
+            if (controller != null && controller.hasClients) {
+              controller.animateTo(
+                0,
+                duration: const Duration(milliseconds: 600),
+                curve: Curves.easeInOutCubic,
+              );
+            }
+          } else {
+            context.go(path);
+          }
+        }
+      },
     );
   }
 
@@ -204,3 +243,46 @@ class AppFooter extends StatelessWidget {
     );
   }
 }
+
+class FooterLink extends StatefulWidget {
+  final String text;
+  final VoidCallback onTap;
+
+  const FooterLink({
+    super.key,
+    required this.text,
+    required this.onTap,
+  });
+
+  @override
+  State<FooterLink> createState() => _FooterLinkState();
+}
+
+class _FooterLinkState extends State<FooterLink> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 150),
+            style: AppTextStyles.bodySmall.copyWith(
+              color: _isHovered ? AppColors.primary : AppColors.textSecondary,
+              decoration: _isHovered ? TextDecoration.underline : TextDecoration.none,
+              decorationColor: AppColors.primary,
+            ),
+            child: Text(widget.text),
+          ),
+        ),
+      ),
+    );
+  }
+}
+

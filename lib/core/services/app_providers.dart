@@ -5,7 +5,10 @@ import '../models/product_model.dart';
 import '../models/collection_model.dart';
 import '../models/order_model.dart';
 import '../models/message_model.dart';
+import '../models/notification_model.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../services/firestore_service.dart';
+import '../services/notification_service.dart';
 
 /// Provider for products data.
 class ProductProvider extends ChangeNotifier {
@@ -16,6 +19,7 @@ class ProductProvider extends ChangeNotifier {
   bool _isLoading = true;
 
   List<ProductModel> get products => _products;
+  List<ProductModel> get activeProducts => _products.where((p) => p.isActive).toList();
   List<ProductModel> get featuredProducts => _featuredProducts;
   bool get isLoading => _isLoading;
 
@@ -24,7 +28,7 @@ class ProductProvider extends ChangeNotifier {
   }
 
   void _init() {
-    _service.streamProducts().listen((data) {
+    _service.streamProducts(activeOnly: false).listen((data) {
       _products = data;
       _isLoading = false;
       notifyListeners();
@@ -60,10 +64,11 @@ class CollectionProvider extends ChangeNotifier {
   bool _isLoading = true;
 
   List<CollectionModel> get collections => _collections;
+  List<CollectionModel> get activeCollections => _collections.where((c) => c.isActive).toList();
   bool get isLoading => _isLoading;
 
   CollectionProvider() {
-    _service.streamCollections().listen((data) {
+    _service.streamCollections(activeOnly: false).listen((data) {
       _collections = data;
       _isLoading = false;
       notifyListeners();
@@ -147,7 +152,37 @@ class OrderProvider extends ChangeNotifier {
   }
 
   Future<void> updateStatus(String id, OrderStatus status) async {
+    // Attempt to find order before updating status in db, or construct message based on existing fields
+    OrderModel? order;
+    try {
+      order = _orders.firstWhere((o) => o.id == id);
+    } catch (_) {
+      // Order not in local list, wait for update or fetch it directly
+    }
+
     await _service.updateOrderStatus(id, status);
+
+    if (order != null && order.conversationId.isNotEmpty) {
+      try {
+        await NotificationService().sendNotificationToUser(
+          conversationId: order.conversationId,
+          title: 'Cập nhật trạng thái đơn hàng',
+          body: 'Đơn hàng #${order.id} của bạn đã được cập nhật sang: ${status.displayName}',
+        );
+        final notif = NotificationModel(
+          id: '',
+          conversationId: order.conversationId,
+          title: 'Cập nhật trạng thái đơn hàng',
+          body: 'Đơn hàng #${order.id} của bạn đã được cập nhật sang: ${status.displayName}',
+          type: NotificationType.orderUpdate,
+          createdAt: DateTime.now(),
+          orderId: order.id,
+        );
+        await _service.createNotification(notif);
+      } catch (e) {
+        // Suppress debug print in production
+      }
+    }
   }
 
   List<OrderModel> get todayOrders {
@@ -173,8 +208,20 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
 
   AuthProvider() {
-    _auth.authStateChanges().listen((user) {
+    _auth.authStateChanges().listen((user) async {
       notifyListeners();
+      if (user != null) {
+        try {
+          final token = await FirebaseMessaging.instance.getToken(
+            vapidKey: "BI3jocSRLjO06h8S_WUUy-DDsENyw5quSRC7YiS7E-UZ11DCtfaolzs-powxcvzR2d9l49AkaXt-GzDJqNDniuk",
+          );
+          if (token != null) {
+            await NotificationService().saveAdminToken(user.uid, token);
+          }
+        } catch (e) {
+          // Suppress debug print in production
+        }
+      }
     });
   }
 
@@ -272,6 +319,36 @@ class ChatProvider extends ChangeNotifier {
     );
 
     await _service.sendMessage(msg);
+
+    if (senderId != 'admin') {
+      try {
+        await NotificationService().sendNotificationToAdmin(
+          title: 'Tin nhắn hỗ trợ mới',
+          body: messageText,
+        );
+      } catch (e) {
+        // Suppress debug print in production
+      }
+    } else {
+      try {
+        await NotificationService().sendNotificationToUser(
+          conversationId: conversationId,
+          title: 'Tin nhắn mới từ cửa hàng',
+          body: messageText,
+        );
+        final notif = NotificationModel(
+          id: '',
+          conversationId: conversationId,
+          title: 'Tin nhắn mới từ cửa hàng',
+          body: messageText,
+          type: NotificationType.chat,
+          createdAt: DateTime.now(),
+        );
+        await _service.createNotification(notif);
+      } catch (e) {
+        // Suppress debug print in production
+      }
+    }
   }
 
   Future<void> renameConversation(String conversationId, String newName) async {
@@ -282,4 +359,48 @@ class ChatProvider extends ChangeNotifier {
     await _service.deleteConversation(conversationId);
   }
 }
+
+/// Provider for managing user in-app notifications
+class NotificationProvider extends ChangeNotifier {
+  final FirestoreService _service = FirestoreService();
+  final String _conversationId;
+  StreamSubscription<List<NotificationModel>>? _subscription;
+
+  List<NotificationModel> _notifications = [];
+  bool _isLoading = true;
+
+  List<NotificationModel> get notifications => _notifications;
+  int get unreadCount => _notifications.where((n) => !n.isRead).length;
+  bool get isLoading => _isLoading;
+
+  NotificationProvider(this._conversationId) {
+    _init();
+  }
+
+  void _init() {
+    _subscription = _service.streamNotifications(_conversationId).listen((data) {
+      _notifications = data;
+      _isLoading = false;
+      notifyListeners();
+    }, onError: (error) {
+      _isLoading = false;
+      notifyListeners();
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> markAsRead(String notificationId) async {
+    await _service.markNotificationAsRead(notificationId);
+  }
+
+  Future<void> markAllAsRead() async {
+    await _service.markAllNotificationsAsRead(_conversationId);
+  }
+}
+
 

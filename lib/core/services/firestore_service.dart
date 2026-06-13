@@ -3,6 +3,7 @@ import '../models/product_model.dart';
 import '../models/collection_model.dart';
 import '../models/order_model.dart';
 import '../models/message_model.dart';
+import '../models/notification_model.dart';
 
 /// Firestore service — single point of access to Firebase data.
 /// Pattern: UI → Provider → Service → Firestore
@@ -255,5 +256,44 @@ class FirestoreService {
   Future<int> getOrderCount() async {
     final snap = await _db.collection('orders').count().get();
     return snap.count ?? 0;
+  }
+
+  // ─── Notifications ──────────────────────────────────────────
+
+  Stream<List<NotificationModel>> streamNotifications(String conversationId) {
+    return _db
+        .collection('notifications')
+        .where('conversationId', isEqualTo: conversationId)
+        .snapshots()
+        .map((snap) {
+      final list = snap.docs
+          .map((d) => NotificationModel.fromJson(d.data(), d.id))
+          .toList();
+      // Sắp xếp in-memory để tránh yêu cầu composite index của Firestore
+      list.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return list.take(50).toList();
+    });
+  }
+
+  Future<void> createNotification(NotificationModel notification) async {
+    await _db.collection('notifications').add(notification.toJson());
+  }
+
+  Future<void> markNotificationAsRead(String id) async {
+    await _db.collection('notifications').doc(id).update({'isRead': true});
+  }
+
+  Future<void> markAllNotificationsAsRead(String conversationId) async {
+    final snap = await _db
+        .collection('notifications')
+        .where('conversationId', isEqualTo: conversationId)
+        .where('isRead', isEqualTo: false)
+        .get();
+
+    final batch = _db.batch();
+    for (final doc in snap.docs) {
+      batch.update(doc.reference, {'isRead': true});
+    }
+    await batch.commit();
   }
 }

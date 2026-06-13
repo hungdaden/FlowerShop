@@ -24,14 +24,14 @@ class CollectionDetailPage extends StatelessWidget {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobile = screenWidth < 768;
 
-    final collection = collectionProvider.collections.firstWhere(
+    final collection = collectionProvider.activeCollections.firstWhere(
       (c) => c.id == collectionId,
-      orElse: () => collectionProvider.collections.isNotEmpty
-          ? collectionProvider.collections.first
+      orElse: () => collectionProvider.activeCollections.isNotEmpty
+          ? collectionProvider.activeCollections.first
           : throw Exception('Collection not found'),
     );
 
-    final collectionProducts = productProvider.products
+    final collectionProducts = productProvider.activeProducts
         .where((p) => p.collectionId == collectionId)
         .toList();
 

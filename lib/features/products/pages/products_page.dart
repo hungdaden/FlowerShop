@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/utils/scroll_controllers.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_text_styles.dart';
@@ -26,10 +27,11 @@ class _ProductsPageState extends State<ProductsPage> {
     final isMobile = screenWidth < 768;
 
     final filteredProducts = _selectedCollectionId == 'all'
-        ? productProvider.products
-        : productProvider.products.where((p) => p.collectionId == _selectedCollectionId).toList();
+        ? productProvider.activeProducts
+        : productProvider.activeProducts.where((p) => p.collectionId == _selectedCollectionId).toList();
 
     return SingleChildScrollView(
+      controller: productsScrollController,
       child: Column(
         children: [
           const SizedBox(height: AppTheme.navbarHeight + 40),
@@ -57,8 +59,8 @@ class _ProductsPageState extends State<ProductsPage> {
                     const SizedBox(height: 48),
 
                     // Filter Pills
-                    if (!collectionProvider.isLoading && collectionProvider.collections.isNotEmpty)
-                      _buildFilterPills(collectionProvider.collections, isMobile),
+                    if (!collectionProvider.isLoading && collectionProvider.activeCollections.isNotEmpty)
+                      _buildFilterPills(collectionProvider.activeCollections, isMobile),
 
                     const SizedBox(height: 40),
 

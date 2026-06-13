@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
@@ -7,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import 'core/router/app_router.dart';
 import 'core/services/app_providers.dart';
+import 'core/services/notification_service.dart';
 import 'core/theme/app_theme.dart';
 
 void main() async {
@@ -34,6 +34,12 @@ void main() async {
     await prefs.setString('user_conversation_id', conversationId);
   }
 
+  // Initialize FCM: silently refresh token if permission already granted,
+  // and start listening for token changes to keep Firestore in sync.
+  final notificationService = NotificationService();
+  notificationService.silentTokenRefresh(conversationId);
+  notificationService.listenForTokenRefresh(conversationId);
+
   runApp(MyApp(conversationId: conversationId));
 }
 
@@ -43,10 +49,6 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Debug print to console
-    if (kIsWeb) {
-      print('DEBUG FLOWERSHOP: host=${Uri.base.host}, isAdminSubdomain=$isAdminSubdomain');
-    }
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => ProductProvider()),
@@ -54,6 +56,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider(conversationId)),
+        ChangeNotifierProvider(create: (_) => NotificationProvider(conversationId)),
       ],
       child: MaterialApp.router(
         title: 'Flower Shop - Premium Flower Shop',

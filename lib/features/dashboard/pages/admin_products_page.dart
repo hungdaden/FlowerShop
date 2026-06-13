@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/models/product_model.dart';
 import '../../../core/services/app_providers.dart';
+import '../../../core/services/storage_service.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/glass_button.dart';
 import '../../../core/widgets/glass_text_field.dart';
+import '../../../core/widgets/image_preview_dialog.dart';
 import '../widgets/admin_layout.dart';
 
 final _currencyFormat = NumberFormat.currency(locale: 'vi_VN', symbol: '₫');
@@ -31,6 +34,50 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
   String _selectedCollectionId = '';
   bool _isFeatured = false;
   bool _isActive = true;
+  bool _isUploadingImage = false;
+
+  Future<void> _pickAndUploadImage(StateSetter setDialogState) async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      if (image == null) return;
+
+      setDialogState(() {
+        _isUploadingImage = true;
+      });
+
+      final bytes = await image.readAsBytes();
+      final extension = image.name.split('.').last.toLowerCase();
+      final validExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+      final fileExt = validExtensions.contains(extension) ? extension : 'jpg';
+
+      final storageService = StorageService();
+      final url = await storageService.uploadImageBytes(
+        bytes: bytes,
+        folder: 'products',
+        fileExtension: fileExt,
+      );
+
+      setDialogState(() {
+        final currentText = _imagesController.text.trim();
+        if (currentText.isEmpty) {
+          _imagesController.text = url;
+        } else {
+          _imagesController.text = '$currentText, $url';
+        }
+        _isUploadingImage = false;
+      });
+    } catch (e) {
+      setDialogState(() {
+        _isUploadingImage = false;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(backgroundColor: AppColors.error, content: Text('Lỗi tải ảnh: $e')),
+        );
+      }
+    }
+  }
 
   void _clearForm() {
     _editingProduct = null;
@@ -112,11 +159,20 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
                                 return DataRow(
                                   cells: [
                                     DataCell(
-                                      ClipRRect(
-                                        borderRadius: BorderRadius.circular(6),
-                                        child: img.isNotEmpty
-                                            ? Image.network(img, width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,__,___)=>_placeholderIcon())
-                                            : _placeholderIcon(),
+                                      Tooltip(
+                                        message: 'Xem chi tiết ảnh',
+                                        child: InkWell(
+                                          onTap: img.isNotEmpty
+                                              ? () => ImagePreviewDialog.show(context, img, p.name)
+                                              : null,
+                                          borderRadius: BorderRadius.circular(6),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(6),
+                                            child: img.isNotEmpty
+                                                ? Image.network(img, width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_,__,___)=>_placeholderIcon())
+                                                : _placeholderIcon(),
+                                          ),
+                                        ),
                                       ),
                                     ),
                                     DataCell(Text(p.name, style: AppTextStyles.label)),
@@ -124,11 +180,15 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
                                     DataCell(Text(_currencyFormat.format(p.price))),
                                     DataCell(
                                       Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          if (p.isFeatured) ...[
-                                            const Icon(Icons.star_rounded, color: AppColors.secondary, size: 18),
-                                            const SizedBox(width: 4),
-                                          ],
+                                          SizedBox(
+                                            width: 18,
+                                            child: p.isFeatured
+                                                ? const Icon(Icons.star_rounded, color: AppColors.secondary, size: 18)
+                                                : null,
+                                          ),
+                                          const SizedBox(width: 12),
                                           Icon(
                                             p.isActive ? Icons.check_circle_outline : Icons.remove_circle_outline,
                                             color: p.isActive ? AppColors.success : AppColors.textLight,
@@ -147,10 +207,10 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
                                               _showFormDialog(context, collectionProvider.collections);
                                             },
                                           ),
-                                          IconButton(
-                                            icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
-                                            onPressed: () => _confirmDelete(p.id, productProvider),
-                                          ),
+                                           IconButton(
+                                             icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                                             onPressed: () => _confirmDelete(p, productProvider),
+                                           ),
                                         ],
                                       ),
                                     ),
@@ -264,11 +324,48 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
                       maxLines: 3,
                     ),
                     const SizedBox(height: 16),
-                    GlassTextField(
-                      controller: _imagesController,
-                      label: 'Link hình ảnh (Phân tách bằng dấu phẩy)',
-                      hint: 'https://images.unsplash.com/photo-1...',
-                      maxLines: 2,
+                     Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Expanded(
+                              child: GlassTextField(
+                                controller: _imagesController,
+                                label: 'Hình ảnh (Link phân tách bằng dấu phẩy)',
+                                hint: 'https://images.unsplash.com/photo-1...',
+                                maxLines: 2,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _isUploadingImage
+                                ? const SizedBox(
+                                    width: 48,
+                                    height: 48,
+                                    child: Padding(
+                                      padding: EdgeInsets.all(8.0),
+                                      child: CircularProgressIndicator(color: AppColors.primary, strokeWidth: 3),
+                                    ),
+                                  )
+                                : Tooltip(
+                                    message: 'Chọn và tải ảnh từ thiết bị',
+                                    child: InkWell(
+                                      onTap: () => _pickAndUploadImage(setDialogState),
+                                      borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(color: AppColors.border),
+                                          borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
+                                        ),
+                                        child: const Icon(Icons.add_photo_alternate_outlined, color: AppColors.primary),
+                                      ),
+                                    ),
+                                  ),
+                          ],
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 16),
                     // Switches
@@ -374,7 +471,7 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
     }
   }
 
-  void _confirmDelete(String id, ProductProvider provider) {
+  void _confirmDelete(ProductModel p, ProductProvider provider) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -389,7 +486,16 @@ class _AdminProductsPageState extends State<AdminProductsPage> {
             onPressed: () async {
               final messenger = ScaffoldMessenger.of(context);
               Navigator.pop(context);
-              await provider.deleteProduct(id);
+              
+              // Xóa ảnh trên storage trước nếu ảnh được lưu trên Storage của chúng ta
+              final storageService = StorageService();
+              for (final url in p.imageUrls) {
+                if (url.contains('firebasestorage.googleapis.com')) {
+                  await storageService.deleteImageByUrl(url);
+                }
+              }
+              
+              await provider.deleteProduct(p.id);
               messenger.showSnackBar(
                 const SnackBar(backgroundColor: AppColors.success, content: Text('Xóa sản phẩm thành công.')),
               );

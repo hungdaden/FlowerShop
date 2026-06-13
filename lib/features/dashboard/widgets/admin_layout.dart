@@ -60,7 +60,7 @@ class AdminLayout extends StatelessWidget {
           ],
         ),
         drawer: Drawer(
-          child: Container(
+          child: Material(
             color: Colors.white,
             child: Column(
               children: [
@@ -99,18 +99,19 @@ class AdminLayout extends StatelessWidget {
       body: Row(
         children: [
           // Sidebar Panel (Left)
-          Container(
-            width: 260,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(
-                right: BorderSide(
-                  color: AppColors.border.withValues(alpha: 0.3),
-                  width: 1,
+          Material(
+            color: Colors.white,
+            child: Container(
+              width: 260,
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(
+                    color: AppColors.border.withValues(alpha: 0.3),
+                    width: 1,
+                  ),
                 ),
               ),
-            ),
-            child: Column(
+              child: Column(
               children: [
                 _buildSidebarHeader(context),
                 const Divider(height: 1),
@@ -145,6 +146,7 @@ class AdminLayout extends StatelessWidget {
                 ),
               ],
             ),
+          ),
           ),
           // Main Content Panel (Right)
           Expanded(

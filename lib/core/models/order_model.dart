@@ -81,6 +81,7 @@ class OrderModel {
   final double totalAmount;
   final OrderStatus status;
   final DateTime createdAt;
+  final String conversationId;
 
   OrderModel({
     required this.id,
@@ -92,6 +93,7 @@ class OrderModel {
     required this.totalAmount,
     this.status = OrderStatus.pending,
     DateTime? createdAt,
+    this.conversationId = '',
   }) : createdAt = createdAt ?? DateTime.now();
 
   factory OrderModel.fromJson(Map<String, dynamic> json, String docId) {
@@ -110,6 +112,7 @@ class OrderModel {
       createdAt: json['createdAt'] is Timestamp
           ? (json['createdAt'] as Timestamp).toDate()
           : DateTime.now(),
+      conversationId: json['conversationId'] ?? '',
     );
   }
 
@@ -123,6 +126,7 @@ class OrderModel {
       'totalAmount': totalAmount,
       'status': status.name,
       'createdAt': Timestamp.fromDate(createdAt),
+      'conversationId': conversationId,
     };
   }
 
@@ -137,6 +141,7 @@ class OrderModel {
       totalAmount: totalAmount,
       status: status ?? this.status,
       createdAt: createdAt,
+      conversationId: conversationId,
     );
   }
 }

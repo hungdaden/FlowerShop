@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:js_interop';
+import 'package:web/web.dart' as web;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +11,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../../core/models/order_model.dart';
 import '../../../core/services/app_providers.dart';
+import '../../../core/services/notification_service.dart';
 import '../../../core/widgets/glass_card.dart';
 import '../../../core/widgets/glass_button.dart';
 import '../../../core/widgets/glass_text_field.dart';
@@ -393,6 +396,19 @@ class _OrderPageState extends State<OrderPage> {
   Future<void> _submitOrder(OrderItem item) async {
     if (!_formKey.currentState!.validate()) return;
 
+    final conversationId = context.read<ChatProvider>().userConversationId;
+
+    // Request notification permission using browser's native API (ensures popup appears in user gesture context)
+    try {
+      final result = await web.Notification.requestPermission().toDart;
+      final permission = result.toDart;
+      if (permission == 'granted') {
+        NotificationService().initNotifications(conversationId: conversationId);
+      }
+    } catch (e) {
+      print('FCM: Could not request notification permission: $e');
+    }
+
     setState(() {
       _isSubmitting = true;
     });
@@ -409,6 +425,7 @@ class _OrderPageState extends State<OrderPage> {
         totalAmount: item.total,
         status: OrderStatus.pending,
         createdAt: DateTime.now(),
+        conversationId: conversationId,
       );
 
       final orderProvider = context.read<OrderProvider>();

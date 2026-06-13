@@ -93,6 +93,7 @@ class _OrderTrackingPageState extends State<OrderTrackingPage> {
                                 hint: 'Nhập số điện thoại đặt hàng (VD: 0987654321)',
                                 keyboardType: TextInputType.phone,
                                 prefixIcon: Icons.phone_android_rounded,
+                                onFieldSubmitted: (_) => _searchOrders(),
                                 validator: (val) {
                                   if (val == null || val.trim().isEmpty) {
                                     return 'Vui lòng nhập số điện thoại';

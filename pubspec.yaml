@@ -24,6 +24,10 @@ dependencies:
   uuid: ^4.5.1
   image_picker: ^1.1.2
   shared_preferences: ^2.3.2
+  firebase_messaging: ^15.2.10
+  http: ^1.6.0
+  googleapis_auth: ^2.3.1
+  dart_jsonwebtoken: ^3.4.1
 
 dev_dependencies:
   flutter_test:
