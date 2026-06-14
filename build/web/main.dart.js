@@ -35591,7 +35591,7 @@ $S:2}
 A.aX6.prototype={
 $1(a){var s=A.et().b
 s=s==null?null:s.canvasKitBaseUrl
-return(s==null?"https://www.gstatic.com/flutter-canvaskit/4c525dac5ebe5971c5708ef73558ed8edcf4a362/":s)+a},
+return(s==null?"canvaskit/":s)+a},
 $S:27}
 A.Y0.prototype={
 gA(a){var s=this.a
