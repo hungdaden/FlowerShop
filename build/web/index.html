@@ -41,6 +41,18 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', function () {
+        // Clear any old conflicting Flutter service workers
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          for (var i = 0; i < registrations.length; i++) {
+            var reg = registrations[i];
+            if (reg.active && reg.active.scriptURL.indexOf('flutter_service_worker.js') !== -1) {
+              reg.unregister().then(function (success) {
+                if (success) console.log('Successfully cleared conflicting Flutter SW');
+              });
+            }
+          }
+        });
+
         navigator.serviceWorker.register('/firebase-messaging-sw.js')
           .then(function (registration) {
             console.log('Firebase Messaging SW registered: ', registration.scope);
