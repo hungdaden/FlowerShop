@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' show Widget;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:go_router/go_router.dart';
 import '../../features/home/pages/home_page.dart';
@@ -17,37 +17,13 @@ import '../../features/dashboard/pages/admin_orders_page.dart';
 import '../../features/dashboard/pages/admin_chat_page.dart';
 import '../widgets/app_scaffold.dart';
 
-/// Fade Through page transition (Material 3 Motion standard).
-/// The exiting page fades out cleanly first (0% - 35%), followed by the incoming page fading in (35% - 100%).
-CustomTransitionPage<void> _buildPageTransition({
+NoTransitionPage<void> _noTransition({
   required Widget child,
   required GoRouterState state,
 }) {
-  return CustomTransitionPage(
+  return NoTransitionPage(
     key: state.pageKey,
     child: child,
-    transitionDuration: const Duration(milliseconds: 250),
-    reverseTransitionDuration: const Duration(milliseconds: 200),
-    transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      // Incoming page fades in during second phase
-      final fadeIn = CurvedAnimation(
-        parent: animation,
-        curve: const Interval(0.35, 1.0, curve: Curves.easeOut),
-      );
-      // Outgoing page fades out during first phase
-      final fadeOut = CurvedAnimation(
-        parent: secondaryAnimation,
-        curve: const Interval(0.0, 0.35, curve: Curves.easeIn),
-      );
-
-      return FadeTransition(
-        opacity: fadeIn,
-        child: FadeTransition(
-          opacity: Tween<double>(begin: 1.0, end: 0.0).animate(fadeOut),
-          child: child,
-        ),
-      );
-    },
   );
 }
 
@@ -99,21 +75,21 @@ final GoRouter appRouter = GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          pageBuilder: (context, state) => _buildPageTransition(
+          pageBuilder: (context, state) => _noTransition(
             state: state,
             child: const HomePage(),
           ),
         ),
         GoRoute(
           path: '/collections',
-          pageBuilder: (context, state) => _buildPageTransition(
+          pageBuilder: (context, state) => _noTransition(
             state: state,
             child: const CollectionsPage(),
           ),
         ),
         GoRoute(
           path: '/collections/:id',
-          pageBuilder: (context, state) => _buildPageTransition(
+          pageBuilder: (context, state) => _noTransition(
             state: state,
             child: CollectionDetailPage(
               collectionId: state.pathParameters['id']!,
@@ -122,14 +98,14 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: '/products',
-          pageBuilder: (context, state) => _buildPageTransition(
+          pageBuilder: (context, state) => _noTransition(
             state: state,
             child: const ProductsPage(),
           ),
         ),
         GoRoute(
           path: '/products/:id',
-          pageBuilder: (context, state) => _buildPageTransition(
+          pageBuilder: (context, state) => _noTransition(
             state: state,
             child: ProductDetailPage(
               productId: state.pathParameters['id']!,
@@ -138,21 +114,21 @@ final GoRouter appRouter = GoRouter(
         ),
         GoRoute(
           path: '/order',
-          pageBuilder: (context, state) => _buildPageTransition(
+          pageBuilder: (context, state) => _noTransition(
             state: state,
             child: const OrderPage(),
           ),
         ),
         GoRoute(
           path: '/order-tracking',
-          pageBuilder: (context, state) => _buildPageTransition(
+          pageBuilder: (context, state) => _noTransition(
             state: state,
             child: const OrderTrackingPage(),
           ),
         ),
         GoRoute(
           path: '/chat',
-          pageBuilder: (context, state) => _buildPageTransition(
+          pageBuilder: (context, state) => _noTransition(
             state: state,
             child: const ChatPage(),
           ),
@@ -163,42 +139,42 @@ final GoRouter appRouter = GoRouter(
     // ─── Admin Routes ──────────────────────────
     GoRoute(
       path: '/admin',
-      pageBuilder: (context, state) => _buildPageTransition(
+      pageBuilder: (context, state) => _noTransition(
         state: state,
         child: const AdminLoginPage(),
       ),
     ),
     GoRoute(
       path: '/admin/dashboard',
-      pageBuilder: (context, state) => _buildPageTransition(
+      pageBuilder: (context, state) => _noTransition(
         state: state,
         child: const DashboardPage(),
       ),
     ),
     GoRoute(
       path: '/admin/products',
-      pageBuilder: (context, state) => _buildPageTransition(
+      pageBuilder: (context, state) => _noTransition(
         state: state,
         child: const AdminProductsPage(),
       ),
     ),
     GoRoute(
       path: '/admin/collections',
-      pageBuilder: (context, state) => _buildPageTransition(
+      pageBuilder: (context, state) => _noTransition(
         state: state,
         child: const AdminCollectionsPage(),
       ),
     ),
     GoRoute(
       path: '/admin/orders',
-      pageBuilder: (context, state) => _buildPageTransition(
+      pageBuilder: (context, state) => _noTransition(
         state: state,
         child: const AdminOrdersPage(),
       ),
     ),
     GoRoute(
       path: '/admin/chat',
-      pageBuilder: (context, state) => _buildPageTransition(
+      pageBuilder: (context, state) => _noTransition(
         state: state,
         child: const AdminChatPage(),
       ),
