@@ -124,75 +124,79 @@ class _CollectionCardState extends State<_CollectionCard> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: AppTheme.animNormal,
-          curve: AppTheme.animCurve,
-          transform: Matrix4.diagonal3Values(_isHovered ? 1.03 : 1.0, _isHovered ? 1.03 : 1.0, 1.0),
-          transformAlignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-            boxShadow: _isHovered ? AppTheme.shadowMedium : AppTheme.shadowSmall,
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                // Image with zoom on hover
-                AnimatedScale(
-                  scale: _isHovered ? 1.08 : 1.0,
-                  duration: AppTheme.animSlow,
-                  curve: AppTheme.animCurve,
-                  child: widget.imageUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: widget.imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) =>
-                              Container(color: AppColors.primaryLight.withValues(alpha: 0.3)),
-                          errorWidget: (_, __, ___) => _placeholderBg(),
-                        )
-                      : _placeholderBg(),
-                ),
-                // Gradient overlay
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withValues(alpha: 0.5),
-                      ],
+    return RepaintBoundary(
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: AppTheme.animNormal,
+            curve: AppTheme.animCurve,
+            transform: Matrix4.diagonal3Values(_isHovered ? 1.03 : 1.0, _isHovered ? 1.03 : 1.0, 1.0),
+            transformAlignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              boxShadow: _isHovered ? AppTheme.shadowMedium : AppTheme.shadowSmall,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Image with zoom on hover
+                  AnimatedScale(
+                    scale: _isHovered ? 1.08 : 1.0,
+                    duration: AppTheme.animSlow,
+                    curve: AppTheme.animCurve,
+                    child: widget.imageUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: widget.imageUrl,
+                            fit: BoxFit.cover,
+                            memCacheWidth: 600,
+                            maxWidthDiskCache: 800,
+                            placeholder: (_, __) =>
+                                Container(color: AppColors.primaryLight.withValues(alpha: 0.3)),
+                            errorWidget: (_, __, ___) => _placeholderBg(),
+                          )
+                        : _placeholderBg(),
+                  ),
+                  // Gradient overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: 0.5),
+                        ],
+                      ),
                     ),
                   ),
-                ),
-                // Name
-                Positioned(
-                  bottom: 16,
-                  left: 16,
-                  right: 16,
-                  child: Text(
-                    widget.name,
-                    style: AppTextStyles.h5.copyWith(
-                      color: Colors.white,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                        ),
-                      ],
+                  // Name
+                  Positioned(
+                    bottom: 16,
+                    left: 16,
+                    right: 16,
+                    child: Text(
+                      widget.name,
+                      style: AppTextStyles.h5.copyWith(
+                        color: Colors.white,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.3),
+                            blurRadius: 8,
+                          ),
+                        ],
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

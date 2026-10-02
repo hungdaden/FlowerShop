@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_theme.dart';
@@ -70,46 +69,44 @@ class _GlassTextFieldState extends State<GlassTextField> {
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(AppTheme.radiusMedium),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: TextFormField(
-                controller: widget.controller,
-                keyboardType: widget.keyboardType,
-                maxLines: widget.maxLines,
-                obscureText: widget.obscureText,
-                enabled: widget.enabled,
-                onChanged: widget.onChanged,
-                onFieldSubmitted: widget.onFieldSubmitted,
-                style: AppTextStyles.body,
-                validator: (value) {
-                  final error = widget.validator?.call(value);
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    if (mounted) setState(() => _errorText = error);
-                  });
-                  return error;
-                },
-                onTap: () => setState(() => _isFocused = true),
-                onTapOutside: (_) => setState(() => _isFocused = false),
-                decoration: InputDecoration(
-                  hintText: widget.hint,
-                  hintStyle: AppTextStyles.body.copyWith(
-                    color: AppColors.textLight,
-                  ),
-                  prefixIcon: widget.prefixIcon != null
-                      ? Icon(widget.prefixIcon,
-                          color: _isFocused
-                              ? AppColors.primary
-                              : AppColors.textLight,
-                          size: 20)
-                      : null,
-                  suffixIcon: widget.suffix != null
-                      ? Padding(
-                          padding: const EdgeInsets.only(right: 12),
-                          child: widget.suffix,
-                        )
-                      : null,
-                  filled: true,
-                  fillColor: Colors.white.withValues(alpha: 0.6),
+            child: TextFormField(
+              controller: widget.controller,
+              keyboardType: widget.keyboardType,
+              maxLines: widget.maxLines,
+              obscureText: widget.obscureText,
+              enabled: widget.enabled,
+              onChanged: widget.onChanged,
+              onFieldSubmitted: widget.onFieldSubmitted,
+              style: AppTextStyles.body,
+              validator: (value) {
+                final error = widget.validator?.call(value);
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted) setState(() => _errorText = error);
+                });
+                return error;
+              },
+              onTap: () => setState(() => _isFocused = true),
+              onTapOutside: (_) => setState(() => _isFocused = false),
+              decoration: InputDecoration(
+                hintText: widget.hint,
+                hintStyle: AppTextStyles.body.copyWith(
+                  color: AppColors.textLight,
+                ),
+                prefixIcon: widget.prefixIcon != null
+                    ? Icon(widget.prefixIcon,
+                        color: _isFocused
+                            ? AppColors.primary
+                            : AppColors.textLight,
+                        size: 20)
+                    : null,
+                suffixIcon: widget.suffix != null
+                    ? Padding(
+                        padding: const EdgeInsets.only(right: 12),
+                        child: widget.suffix,
+                      )
+                    : null,
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.85),
                   border: OutlineInputBorder(
                     borderRadius:
                         BorderRadius.circular(AppTheme.radiusMedium),
@@ -148,8 +145,7 @@ class _GlassTextFieldState extends State<GlassTextField> {
               ),
             ),
           ),
-        ),
-        // Inline error display
+          // Inline error display
         if (_errorText != null) ...[
           const SizedBox(height: 6),
           Text(

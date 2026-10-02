@@ -180,18 +180,20 @@ class _HeroSectionState extends State<HeroSection>
         // Right: Floating flower image
         Expanded(
           flex: 4,
-          child: AnimatedBuilder(
-            animation: Listenable.merge([_fadeIn, _float]),
-            builder: (context, child) {
-              return Opacity(
-                opacity: _fadeIn.value,
-                child: Transform.translate(
-                  offset: Offset(0, _float.value),
-                  child: child,
-                ),
-              );
-            },
-            child: _buildFlowerImage(),
+          child: RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: Listenable.merge([_fadeIn, _float]),
+              builder: (context, child) {
+                return Opacity(
+                  opacity: _fadeIn.value,
+                  child: Transform.translate(
+                    offset: Offset(0, _float.value),
+                    child: child,
+                  ),
+                );
+              },
+              child: _buildFlowerImage(),
+            ),
           ),
         ),
       ],
@@ -214,17 +216,19 @@ class _HeroSectionState extends State<HeroSection>
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           // Floating flower
-          AnimatedBuilder(
-            animation: _float,
-            builder: (context, child) {
-              return Transform.translate(
-                offset: Offset(0, _float.value),
-                child: child,
-              );
-            },
-            child: SizedBox(
-              height: 200,
-              child: _buildFlowerImage(),
+          RepaintBoundary(
+            child: AnimatedBuilder(
+              animation: _float,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(0, _float.value),
+                  child: child,
+                );
+              },
+              child: SizedBox(
+                height: 200,
+                child: _buildFlowerImage(),
+              ),
             ),
           ),
           const SizedBox(height: 32),

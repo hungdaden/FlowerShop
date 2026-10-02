@@ -1,3 +1,4 @@
+import 'dart:ui' show PointerDeviceKind;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
@@ -43,6 +44,26 @@ void main() async {
   runApp(MyApp(conversationId: conversationId));
 }
 
+/// Universal smooth scrolling behavior with inertia and bounce across all devices.
+class AppScrollBehavior extends MaterialScrollBehavior {
+  const AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+        PointerDeviceKind.trackpad,
+        PointerDeviceKind.stylus,
+      };
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) {
+    return const BouncingScrollPhysics(
+      parent: AlwaysScrollableScrollPhysics(),
+    );
+  }
+}
+
 class MyApp extends StatelessWidget {
   final String conversationId;
   const MyApp({super.key, required this.conversationId});
@@ -62,6 +83,7 @@ class MyApp extends StatelessWidget {
         title: 'Flower Shop - Premium Flower Shop',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
+        scrollBehavior: const AppScrollBehavior(),
         routerConfig: appRouter,
       ),
     );

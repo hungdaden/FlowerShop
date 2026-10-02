@@ -21,9 +21,9 @@ class GlassCard extends StatefulWidget {
     super.key,
     required this.child,
     this.borderRadius = AppTheme.radiusLarge,
-    this.blur = 30,
-    this.opacity = 0.15,
-    this.borderOpacity = 0.3,
+    this.blur = 0,
+    this.opacity = 0.8,
+    this.borderOpacity = 0.4,
     this.padding,
     this.margin,
     this.enableHover = true,
@@ -77,61 +77,69 @@ class _GlassCardState extends State<GlassCard>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _scaleAnimation.value,
-          child: MouseRegion(
-            cursor: widget.onTap != null
-                ? SystemMouseCursors.click
-                : SystemMouseCursors.basic,
-            onEnter: (_) => _onHoverChange(true),
-            onExit: (_) => _onHoverChange(false),
-            child: GestureDetector(
-              onTap: widget.onTap,
-              child: Container(
-                margin: widget.margin,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(widget.borderRadius),
-                  border: Border.all(
-                    color: _isHovered
-                        ? AppColors.primary.withValues(alpha: 0.6)
-                        : AppColors.border.withValues(alpha: widget.borderOpacity),
-                    width: 1.2,
+    return RepaintBoundary(
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final contentContainer = Container(
+            padding: widget.padding,
+            color: Colors.white.withValues(
+              alpha: widget.opacity + (_shadowAnimation.value * 0.05),
+            ),
+            child: child,
+          );
+
+          return Transform.scale(
+            scale: _scaleAnimation.value,
+            child: MouseRegion(
+              cursor: widget.onTap != null
+                  ? SystemMouseCursors.click
+                  : SystemMouseCursors.basic,
+              onEnter: (_) => _onHoverChange(true),
+              onExit: (_) => _onHoverChange(false),
+              child: GestureDetector(
+                onTap: widget.onTap,
+                child: Container(
+                  margin: widget.margin,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(widget.borderRadius),
+                    border: Border.all(
+                      color: _isHovered
+                          ? AppColors.primary.withValues(alpha: 0.6)
+                          : AppColors.border.withValues(alpha: widget.borderOpacity),
+                      width: 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.shadowLight.withValues(
+                          alpha: 0.04 + (_shadowAnimation.value * 0.06),
+                        ),
+                        blurRadius: 20 + (_shadowAnimation.value * 20),
+                        offset: Offset(0, 4 + (_shadowAnimation.value * 4)),
+                      ),
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.shadowLight.withValues(
-                        alpha: 0.04 + (_shadowAnimation.value * 0.06),
-                      ),
-                      blurRadius: 20 + (_shadowAnimation.value * 20),
-                      offset: Offset(0, 4 + (_shadowAnimation.value * 4)),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(
+                      widget.borderRadius > 1.2 ? widget.borderRadius - 1.2 : widget.borderRadius,
                     ),
-                  ],
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(widget.borderRadius > 1.2 ? widget.borderRadius - 1.2 : widget.borderRadius),
-                  child: BackdropFilter(
-                    filter: ImageFilter.blur(
-                      sigmaX: widget.blur,
-                      sigmaY: widget.blur,
-                    ),
-                    child: Container(
-                      padding: widget.padding,
-                      color: Colors.white.withValues(
-                        alpha: widget.opacity + (_shadowAnimation.value * 0.05),
-                      ),
-                      child: child,
-                    ),
+                    child: widget.blur > 0
+                        ? BackdropFilter(
+                            filter: ImageFilter.blur(
+                              sigmaX: widget.blur,
+                              sigmaY: widget.blur,
+                            ),
+                            child: contentContainer,
+                          )
+                        : contentContainer,
                   ),
                 ),
               ),
             ),
-          ),
-        );
-      },
-      child: widget.child,
+          );
+        },
+        child: widget.child,
+      ),
     );
   }
 }

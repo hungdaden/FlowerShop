@@ -17,7 +17,8 @@ import '../../features/dashboard/pages/admin_orders_page.dart';
 import '../../features/dashboard/pages/admin_chat_page.dart';
 import '../widgets/app_scaffold.dart';
 
-/// Custom fade+scale page transition (replaces default Material transition).
+/// Fade Through page transition (Material 3 Motion standard).
+/// The exiting page fades out cleanly first (0% - 35%), followed by the incoming page fading in (35% - 100%).
 CustomTransitionPage<void> _buildPageTransition({
   required Widget child,
   required GoRouterState state,
@@ -25,20 +26,28 @@ CustomTransitionPage<void> _buildPageTransition({
   return CustomTransitionPage(
     key: state.pageKey,
     child: child,
+    transitionDuration: const Duration(milliseconds: 250),
+    reverseTransitionDuration: const Duration(milliseconds: 200),
     transitionsBuilder: (context, animation, secondaryAnimation, child) {
-      final curve = CurvedAnimation(
+      // Incoming page fades in during second phase
+      final fadeIn = CurvedAnimation(
         parent: animation,
-        curve: Curves.easeOutCubic,
+        curve: const Interval(0.35, 1.0, curve: Curves.easeOut),
       );
+      // Outgoing page fades out during first phase
+      final fadeOut = CurvedAnimation(
+        parent: secondaryAnimation,
+        curve: const Interval(0.0, 0.35, curve: Curves.easeIn),
+      );
+
       return FadeTransition(
-        opacity: curve,
-        child: ScaleTransition(
-          scale: Tween<double>(begin: 0.96, end: 1.0).animate(curve),
+        opacity: fadeIn,
+        child: FadeTransition(
+          opacity: Tween<double>(begin: 1.0, end: 0.0).animate(fadeOut),
           child: child,
         ),
       );
     },
-    transitionDuration: const Duration(milliseconds: 350),
   );
 }
 

@@ -51,6 +51,8 @@ class CollectionDetailPage extends StatelessWidget {
                     ? CachedNetworkImage(
                         imageUrl: collection.imageUrl,
                         fit: BoxFit.cover,
+                        memCacheWidth: 1200,
+                        maxWidthDiskCache: 1600,
                       )
                     : Container(
                         decoration: const BoxDecoration(

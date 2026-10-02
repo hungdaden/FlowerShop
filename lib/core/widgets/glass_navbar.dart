@@ -52,50 +52,52 @@ class GlassNavbar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildDesktopNav(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.5),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                blurRadius: 30,
-                offset: const Offset(0, 8),
+    return RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            height: 56,
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.6),
+                width: 1,
               ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              // Logo
-              _buildLogo(context),
-              const Spacer(),
-              // Nav items
-              ..._navItems.map((item) => _NavItemWidget(
-                    item: item,
-                    isActive: _isActive(item.path),
-                    onTap: () {
-                      if (currentPath == item.path) {
-                        _scrollTo(item.path);
-                      } else {
-                        context.go(item.path);
-                      }
-                    },
-                  )),
-              const SizedBox(width: 8),
-              const NotificationBell(),
-              const SizedBox(width: 8),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  blurRadius: 30,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                const SizedBox(width: 12),
+                // Logo
+                _buildLogo(context),
+                const Spacer(),
+                // Nav items
+                ..._navItems.map((item) => _NavItemWidget(
+                      item: item,
+                      isActive: _isActive(item.path),
+                      onTap: () {
+                        if (currentPath == item.path) {
+                          _scrollTo(item.path);
+                        } else {
+                          context.go(item.path);
+                        }
+                      },
+                    )),
+                const SizedBox(width: 8),
+                const NotificationBell(),
+                const SizedBox(width: 8),
+              ],
+            ),
           ),
         ),
       ),
@@ -103,40 +105,42 @@ class GlassNavbar extends StatelessWidget implements PreferredSizeWidget {
   }
 
   Widget _buildMobileNav(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-        child: Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.7),
-            borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.5),
-              width: 1,
+    return RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            height: 56,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.6),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.08),
+                  blurRadius: 30,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.08),
-                blurRadius: 30,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              _buildLogo(context),
-              const Spacer(),
-              const NotificationBell(),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.menu_rounded),
-                color: AppColors.textPrimary,
-                onPressed: () => _showMobileMenu(context),
-              ),
-            ],
+            child: Row(
+              children: [
+                _buildLogo(context),
+                const Spacer(),
+                const NotificationBell(),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.menu_rounded),
+                  color: AppColors.textPrimary,
+                  onPressed: () => _showMobileMenu(context),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -344,11 +348,13 @@ void _scrollTo(String path) {
   }
 
   if (controller != null && controller.hasClients) {
-    controller.animateTo(
-      0,
-      duration: const Duration(milliseconds: 600),
-      curve: Curves.easeInOutCubic,
-    );
+    for (final position in controller.positions) {
+      position.animateTo(
+        0,
+        duration: const Duration(milliseconds: 600),
+        curve: Curves.easeInOutCubic,
+      );
+    }
   }
 }
 

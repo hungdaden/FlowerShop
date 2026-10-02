@@ -136,6 +136,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       ? CachedNetworkImage(
                           imageUrl: imageUrls[_activeImageIndex],
                           fit: BoxFit.cover,
+                          memCacheWidth: 1000,
+                          maxWidthDiskCache: 1200,
                           errorWidget: (context, url, error) => _placeholder(size: 80),
                         )
                       : _placeholder(size: 80),
@@ -168,6 +170,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                             child: CachedNetworkImage(
                               imageUrl: imageUrls[index],
                               fit: BoxFit.cover,
+                              memCacheWidth: 200,
+                              maxWidthDiskCache: 300,
                               errorWidget: (context, url, error) => _placeholder(size: 30),
                             ),
                           ),
@@ -273,6 +277,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 ? CachedNetworkImage(
                     imageUrl: imageUrls[_activeImageIndex],
                     fit: BoxFit.cover,
+                    memCacheWidth: 1000,
+                    maxWidthDiskCache: 1200,
                     errorWidget: (context, url, error) => _placeholder(size: 80),
                   )
                 : _placeholder(size: 80),
@@ -304,6 +310,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       child: CachedNetworkImage(
                         imageUrl: imageUrls[index],
                         fit: BoxFit.cover,
+                        memCacheWidth: 200,
+                        maxWidthDiskCache: 300,
                         errorWidget: (context, url, error) => _placeholder(size: 20),
                       ),
                     ),

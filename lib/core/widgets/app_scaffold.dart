@@ -37,7 +37,9 @@ class AppScaffold extends StatelessWidget {
               left: 0,
               right: 0,
               child: SafeArea(
-                child: GlassNavbar(currentPath: currentPath),
+                child: RepaintBoundary(
+                  child: GlassNavbar(currentPath: currentPath),
+                ),
               ),
             ),
         ],
@@ -215,11 +217,13 @@ class AppFooter extends StatelessWidget {
             }
 
             if (controller != null && controller.hasClients) {
-              controller.animateTo(
-                0,
-                duration: const Duration(milliseconds: 600),
-                curve: Curves.easeInOutCubic,
-              );
+              for (final position in controller.positions) {
+                position.animateTo(
+                  0,
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeInOutCubic,
+                );
+              }
             }
           } else {
             context.go(path);

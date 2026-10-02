@@ -31,56 +31,59 @@ class _GlassProductCardState extends State<GlassProductCard> {
     final product = widget.product;
     final imageUrl = product.imageUrls.isNotEmpty ? product.imageUrls.first : '';
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: AppTheme.animNormal,
-          curve: AppTheme.animCurve,
-          transform: Matrix4.diagonal3Values(_isHovered ? 1.02 : 1.0, _isHovered ? 1.02 : 1.0, 1.0),
-          transformAlignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: _isHovered ? 0.9 : 0.7),
-            borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
-            border: Border.all(
-              color: _isHovered
-                  ? AppColors.primary.withValues(alpha: 0.3)
-                  : AppColors.border.withValues(alpha: 0.3),
-              width: 1,
+    return RepaintBoundary(
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: AppTheme.animNormal,
+            curve: AppTheme.animCurve,
+            transform: Matrix4.diagonal3Values(_isHovered ? 1.02 : 1.0, _isHovered ? 1.02 : 1.0, 1.0),
+            transformAlignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: _isHovered ? 0.9 : 0.7),
+              borderRadius: BorderRadius.circular(AppTheme.radiusLarge),
+              border: Border.all(
+                color: _isHovered
+                    ? AppColors.primary.withValues(alpha: 0.3)
+                    : AppColors.border.withValues(alpha: 0.3),
+                width: 1,
+              ),
+              boxShadow: _isHovered ? AppTheme.shadowMedium : AppTheme.shadowSmall,
             ),
-            boxShadow: _isHovered ? AppTheme.shadowMedium : AppTheme.shadowSmall,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Image
-              Expanded(
-                flex: 3,
-                child: ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(AppTheme.radiusLarge),
-                  ),
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      AnimatedScale(
-                        scale: _isHovered ? 1.06 : 1.0,
-                        duration: AppTheme.animSlow,
-                        curve: AppTheme.animCurve,
-                        child: imageUrl.isNotEmpty
-                            ? CachedNetworkImage(
-                                imageUrl: imageUrl,
-                                fit: BoxFit.cover,
-                                placeholder: (_, __) => Container(
-                                  color: AppColors.primaryLight.withValues(alpha: 0.2),
-                                ),
-                                errorWidget: (_, __, ___) => _productPlaceholder(),
-                              )
-                            : _productPlaceholder(),
-                      ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Image
+                Expanded(
+                  flex: 3,
+                  child: ClipRRect(
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(AppTheme.radiusLarge),
+                    ),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        AnimatedScale(
+                          scale: _isHovered ? 1.06 : 1.0,
+                          duration: AppTheme.animSlow,
+                          curve: AppTheme.animCurve,
+                          child: imageUrl.isNotEmpty
+                              ? CachedNetworkImage(
+                                  imageUrl: imageUrl,
+                                  fit: BoxFit.cover,
+                                  memCacheWidth: 600,
+                                  maxWidthDiskCache: 800,
+                                  placeholder: (_, __) => Container(
+                                    color: AppColors.primaryLight.withValues(alpha: 0.2),
+                                  ),
+                                  errorWidget: (_, __, ___) => _productPlaceholder(),
+                                )
+                              : _productPlaceholder(),
+                        ),
                       if (product.isFeatured)
                         Positioned(
                           top: 10,
@@ -140,8 +143,9 @@ class _GlassProductCardState extends State<GlassProductCard> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _productPlaceholder() {
     return Container(

@@ -139,40 +139,43 @@ class _CollectionCardState extends State<_CollectionCard> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _isHovered = true),
-      onExit: (_) => setState(() => _isHovered = false),
-      child: GestureDetector(
-        onTap: widget.onTap,
-        child: AnimatedContainer(
-          duration: AppTheme.animNormal,
-          curve: AppTheme.animCurve,
-          transform: Matrix4.diagonal3Values(_isHovered ? 1.02 : 1.0, _isHovered ? 1.02 : 1.0, 1.0),
-          transformAlignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-            boxShadow: _isHovered ? AppTheme.shadowMedium : AppTheme.shadowSmall,
-          ),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(AppTheme.radiusXL),
-            child: Stack(
-              fit: StackFit.expand,
-              children: [
-                AnimatedScale(
-                  scale: _isHovered ? 1.06 : 1.0,
-                  duration: AppTheme.animSlow,
-                  curve: AppTheme.animCurve,
-                  child: widget.imageUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: widget.imageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) =>
-                              Container(color: AppColors.primaryLight.withValues(alpha: 0.2)),
-                          errorWidget: (_, __, ___) => _placeholderBg(),
-                        )
-                      : _placeholderBg(),
-                ),
+    return RepaintBoundary(
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          child: AnimatedContainer(
+            duration: AppTheme.animNormal,
+            curve: AppTheme.animCurve,
+            transform: Matrix4.diagonal3Values(_isHovered ? 1.02 : 1.0, _isHovered ? 1.02 : 1.0, 1.0),
+            transformAlignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+              boxShadow: _isHovered ? AppTheme.shadowMedium : AppTheme.shadowSmall,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(AppTheme.radiusXL),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  AnimatedScale(
+                    scale: _isHovered ? 1.06 : 1.0,
+                    duration: AppTheme.animSlow,
+                    curve: AppTheme.animCurve,
+                    child: widget.imageUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: widget.imageUrl,
+                            fit: BoxFit.cover,
+                            memCacheWidth: 600,
+                            maxWidthDiskCache: 800,
+                            placeholder: (_, __) =>
+                                Container(color: AppColors.primaryLight.withValues(alpha: 0.2)),
+                            errorWidget: (_, __, ___) => _placeholderBg(),
+                          )
+                        : _placeholderBg(),
+                  ),
                 Container(
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
@@ -222,8 +225,9 @@ class _CollectionCardState extends State<_CollectionCard> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _placeholderBg() {
     return Container(
